@@ -19,6 +19,8 @@ type Settings = {
   hasSmtpPass: boolean;
   hasTelegramToken: boolean;
   hasSignalWebhook: boolean;
+  hasPlantNetKey?: boolean;
+  hasAutomationWebhook?: boolean;
 };
 
 export function SettingsPage() {
@@ -26,6 +28,10 @@ export function SettingsPage() {
   const [smtpPass, setSmtpPass] = useState("");
   const [telegramToken, setTelegramToken] = useState("");
   const [signalUrl, setSignalUrl] = useState("");
+  const [plantNetKey, setPlantNetKey] = useState("");
+  const [automationUrl, setAutomationUrl] = useState("");
+  const [tokenName, setTokenName] = useState("home-assistant");
+  const [newToken, setNewToken] = useState("");
   const [msg, setMsg] = useState("");
   const [icsText, setIcsText] = useState("");
 
@@ -59,12 +65,26 @@ export function SettingsPage() {
     if (smtpPass) body.smtpPass = smtpPass;
     if (telegramToken) body.telegramBotToken = telegramToken;
     if (signalUrl) body.signalWebhookUrl = signalUrl;
+    if (plantNetKey) body.plantNetApiKey = plantNetKey;
+    if (automationUrl) body.automationWebhookUrl = automationUrl;
     await api("/api/settings", { method: "PATCH", body: JSON.stringify(body) });
     setMsg("Gespeichert – Wetter nutzt ab sofort die neuen Koordinaten.");
     setSmtpPass("");
     setTelegramToken("");
     setSignalUrl("");
+    setPlantNetKey("");
+    setAutomationUrl("");
     await load();
+  }
+
+  async function createToken(e: FormEvent) {
+    e.preventDefault();
+    const res = await api<{ token: string }>("/api/tokens", {
+      method: "POST",
+      body: JSON.stringify({ name: tokenName }),
+    });
+    setNewToken(res.token);
+    setMsg("API-Token erzeugt – einmalig kopieren.");
   }
 
   async function genVapid() {
@@ -309,6 +329,60 @@ export function SettingsPage() {
         <textarea value={icsText} onChange={(e) => setIcsText(e.target.value)} rows={8} />
         <button className="btn">Importieren</button>
       </form>
+
+      <section className="panel stack" style={{ marginTop: "1rem" }}>
+        <h3>PlantNet & Automationen</h3>
+        <label className="field">
+          PlantNet API-Key {s.hasPlantNetKey ? "(gesetzt)" : ""}
+          <input
+            type="password"
+            value={plantNetKey}
+            onChange={(e) => setPlantNetKey(e.target.value)}
+            placeholder="für Pflanzenerkennung"
+          />
+        </label>
+        <label className="field">
+          Automation-Webhook {s.hasAutomationWebhook ? "(gesetzt)" : ""}
+          <input
+            value={automationUrl}
+            onChange={(e) => setAutomationUrl(e.target.value)}
+            placeholder="https://homeassistant.local/api/webhook/..."
+          />
+        </label>
+        <form className="row" onSubmit={createToken}>
+          <label className="field">
+            API-Token Name
+            <input value={tokenName} onChange={(e) => setTokenName(e.target.value)} />
+          </label>
+          <button className="btn secondary">Token erzeugen</button>
+        </form>
+        {newToken ? (
+          <pre className="guide-md">Bearer {newToken}</pre>
+        ) : (
+          <p className="muted">Hook: POST /api/hooks/care mit Bearer hortis_…</p>
+        )}
+        <button
+          className="btn"
+          type="button"
+          onClick={() => {
+            void (async () => {
+              await api("/api/settings", {
+                method: "PATCH",
+                body: JSON.stringify({
+                  ...(plantNetKey ? { plantNetApiKey: plantNetKey } : {}),
+                  ...(automationUrl ? { automationWebhookUrl: automationUrl } : {}),
+                }),
+              });
+              setPlantNetKey("");
+              setAutomationUrl("");
+              setMsg("Integrationen gespeichert.");
+              await load();
+            })();
+          }}
+        >
+          PlantNet/Webhook speichern
+        </button>
+      </section>
     </div>
   );
 }

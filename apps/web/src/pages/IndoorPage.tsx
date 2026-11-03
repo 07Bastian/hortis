@@ -221,6 +221,24 @@ export function IndoorPage() {
                 <label className="field">Notizen<textarea value={selected.notes || ""} onChange={(e) => setSelected({ ...selected, notes: e.target.value })} /></label>
                 <button className="btn">Profil speichern</button>
               </form>
+              <div className="row">
+                <button type="button" className="btn secondary" onClick={() => void api(`/api/plants/${selected.id}/clone`, { method: "POST" }).then(refresh)}>
+                  Klonen
+                </button>
+                <button type="button" className="btn danger" onClick={() => void api(`/api/plants/${selected.id}/archive`, { method: "POST", body: JSON.stringify({ reason: "archived" }) }).then(async () => { setSelected(null); await refresh(); })}>
+                  Archivieren
+                </button>
+              </div>
+              {selected.locationId ? (
+                <div className="row">
+                  <button type="button" className="btn secondary" onClick={() => void api(`/api/locations/${selected.locationId}/bulk-care`, { method: "POST", body: JSON.stringify({ eventType: "water" }) })}>
+                    Standort gießen
+                  </button>
+                  <button type="button" className="btn secondary" onClick={() => void api(`/api/locations/${selected.locationId}/bulk-care`, { method: "POST", body: JSON.stringify({ eventType: "fertilize" }) })}>
+                    Standort düngen
+                  </button>
+                </div>
+              ) : null}
               <label className="field">
                 Foto hochladen
                 <input type="file" accept="image/*" onChange={(e) => {

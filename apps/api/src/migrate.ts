@@ -169,10 +169,60 @@ export function migrate(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      display_name TEXT NOT NULL,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS calendar_events (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      class TEXT NOT NULL DEFAULT 'general',
+      date_from TEXT NOT NULL,
+      date_till TEXT NOT NULL,
+      plant_id TEXT REFERENCES plants(id) ON DELETE SET NULL,
+      bed_id TEXT REFERENCES beds(id) ON DELETE SET NULL,
+      notes TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS harvest_logs (
+      id TEXT PRIMARY KEY,
+      planting_id TEXT REFERENCES plantings(id) ON DELETE SET NULL,
+      bed_id TEXT REFERENCES beds(id) ON DELETE SET NULL,
+      name TEXT NOT NULL,
+      weight_g REAL,
+      quality TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      harvested_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS api_tokens (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL,
+      last_used_at TEXT,
+      active INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS plant_history (
+      id TEXT PRIMARY KEY,
+      plant_json TEXT NOT NULL,
+      reason TEXT NOT NULL DEFAULT 'archived',
+      archived_at TEXT NOT NULL,
+      archived_by TEXT REFERENCES users(id) ON DELETE SET NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_plants_kind ON plants(kind);
     CREATE INDEX IF NOT EXISTS idx_events_plant ON care_events(plant_id);
     CREATE INDEX IF NOT EXISTS idx_plantings_bed ON plantings(bed_id);
     CREATE INDEX IF NOT EXISTS idx_photos_plant ON plant_photos(plant_id);
+    CREATE INDEX IF NOT EXISTS idx_chat_created ON chat_messages(created_at);
+    CREATE INDEX IF NOT EXISTS idx_cal_from ON calendar_events(date_from);
   `);
 
   const plantCols = db.prepare(`PRAGMA table_info(plants)`).all() as { name: string }[];
@@ -188,6 +238,7 @@ export function migrate(db: DatabaseSync): void {
     ["origin", "TEXT NOT NULL DEFAULT ''"],
     ["price", "REAL"],
     ["qr_code", "TEXT"],
+    ["archived", "INTEGER NOT NULL DEFAULT 0"],
   ];
   for (const [col, def] of plantExtras) {
     if (!plantNames.has(col)) db.exec(`ALTER TABLE plants ADD COLUMN ${col} ${def}`);

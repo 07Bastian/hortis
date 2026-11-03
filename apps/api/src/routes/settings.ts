@@ -26,6 +26,8 @@ const settingsPatchSchema = z.object({
   notifySignal: z.boolean().optional(),
   notifyPush: z.boolean().optional(),
   vapidSubject: z.string().max(200).optional(),
+  plantNetApiKey: z.string().max(200).optional(),
+  automationWebhookUrl: z.string().max(500).optional(),
 });
 
 export async function settingsRoutes(app: FastifyInstance): Promise<void> {

@@ -8,6 +8,7 @@ import { GardenPage } from "./pages/GardenPage";
 import { OpsPage } from "./pages/OpsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { GuidesPage } from "./pages/GuidesPage";
+import { CollabPage } from "./pages/CollabPage";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -22,6 +23,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <NavLink to="/bonsai">Bonsai</NavLink>
           <NavLink to="/garden">Garten</NavLink>
           <NavLink to="/guides">Guides</NavLink>
+          <NavLink to="/collab">Kollaboration</NavLink>
           <NavLink to="/ops">Aufgaben</NavLink>
           <NavLink to="/settings">Einstellungen</NavLink>
         </nav>
@@ -51,6 +53,7 @@ export function App() {
         <Route path="/bonsai" element={<BonsaiPage />} />
         <Route path="/garden" element={<GardenPage />} />
         <Route path="/guides" element={<GuidesPage />} />
+        <Route path="/collab" element={<CollabPage />} />
         <Route path="/ops" element={<OpsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

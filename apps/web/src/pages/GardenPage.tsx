@@ -41,6 +41,9 @@ export function GardenPage() {
   const [plantFamily, setPlantFamily] = useState("solanaceae");
   const [cellX, setCellX] = useState(0);
   const [cellY, setCellY] = useState(0);
+  const [harvestName, setHarvestName] = useState("");
+  const [harvestWeight, setHarvestWeight] = useState(0);
+  const [harvests, setHarvests] = useState<{ id: string; name: string; weightG: number | null; harvestedAt: string }[]>([]);
 
   const activeBed = beds.find((b) => b.id === bedId) ?? null;
 
@@ -64,14 +67,16 @@ export function GardenPage() {
   }, [activeBed, plantings]);
 
   async function refresh() {
-    const [b, s, p] = await Promise.all([
+    const [b, s, p, h] = await Promise.all([
       api<{ beds: Bed[] }>("/api/beds"),
       api<{ seeds: Seed[] }>("/api/seeds"),
       api<{ plantings: Planting[] }>(`/api/plantings?year=${year}`),
+      api<{ harvests: typeof harvests }>("/api/harvest"),
     ]);
     setBeds(b.beds);
     setSeeds(s.seeds);
     setPlantings(p.plantings);
+    setHarvests(h.harvests);
     if (!bedId && b.beds[0]) setBedId(b.beds[0].id);
   }
 
@@ -230,6 +235,53 @@ export function GardenPage() {
           )}
         </section>
       </div>
+
+      <section className="panel stack" style={{ marginTop: "1rem" }}>
+        <h3>Ernte-Log</h3>
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void api("/api/harvest", {
+              method: "POST",
+              body: JSON.stringify({
+                bedId: bedId || null,
+                name: harvestName,
+                weightG: harvestWeight || null,
+                quality: "",
+                notes: "",
+              }),
+            }).then(async () => {
+              setHarvestName("");
+              await refresh();
+            });
+          }}
+        >
+          <label className="field">
+            Kultur
+            <input value={harvestName} onChange={(e) => setHarvestName(e.target.value)} required />
+          </label>
+          <label className="field">
+            Gewicht g
+            <input
+              type="number"
+              value={harvestWeight}
+              onChange={(e) => setHarvestWeight(Number(e.target.value))}
+            />
+          </label>
+          <button className="btn">Ernte buchen</button>
+        </form>
+        <ul className="list">
+          {harvests.slice(0, 8).map((h) => (
+            <li key={h.id}>
+              <span>{h.name}</span>
+              <span className="badge">
+                {h.weightG ?? "—"} g · {new Date(h.harvestedAt).toLocaleDateString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="panel" style={{ marginTop: "1rem" }}>
         <h3>Beetplan {activeBed?.name ?? ""}</h3>

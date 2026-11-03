@@ -60,10 +60,20 @@ export async function plantRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/api/plants", async (request) => {
-    const { kind } = request.query as { kind?: string };
-    const rows = kind
-      ? db.prepare(`SELECT * FROM plants WHERE kind = ? ORDER BY name`).all(kind)
-      : db.prepare(`SELECT * FROM plants ORDER BY name`).all();
+    const { kind, archived } = request.query as { kind?: string; archived?: string };
+    const showArchived = archived === "1";
+    let rows: unknown[];
+    if (kind) {
+      rows = db
+        .prepare(
+          `SELECT * FROM plants WHERE kind = ? AND archived = ? ORDER BY name`,
+        )
+        .all(kind, showArchived ? 1 : 0);
+    } else {
+      rows = db
+        .prepare(`SELECT * FROM plants WHERE archived = ? ORDER BY name`)
+        .all(showArchived ? 1 : 0);
+    }
     return { plants: rows.map((r) => mapPlant(r as Record<string, unknown>)) };
   });
 

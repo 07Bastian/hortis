@@ -21,6 +21,8 @@ export type AppSettings = {
   vapidPublicKey: string;
   vapidPrivateKey: string;
   vapidSubject: string;
+  plantNetApiKey: string;
+  automationWebhookUrl: string;
 };
 
 const DEFAULTS: AppSettings = {
@@ -43,6 +45,8 @@ const DEFAULTS: AppSettings = {
   vapidPublicKey: "",
   vapidPrivateKey: "",
   vapidSubject: "mailto:admin@hortis.local",
+  plantNetApiKey: "",
+  automationWebhookUrl: "",
 };
 
 function getRaw(key: string): string | null {
@@ -103,5 +107,7 @@ export function publicSettings() {
     hasTelegramToken: Boolean(s.telegramBotToken),
     hasSignalWebhook: Boolean(s.signalWebhookUrl),
     hasVapidPrivate: Boolean(s.vapidPrivateKey),
+    hasPlantNetKey: Boolean(s.plantNetApiKey),
+    hasAutomationWebhook: Boolean(s.automationWebhookUrl),
   };
 }

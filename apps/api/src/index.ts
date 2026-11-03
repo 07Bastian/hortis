@@ -16,6 +16,7 @@ import { gardenRoutes } from "./routes/garden.js";
 import { opsRoutes } from "./routes/ops.js";
 import { settingsRoutes } from "./routes/settings.js";
 import { uploadRoutes } from "./routes/uploads.js";
+import { collabRoutes } from "./routes/collab.js";
 import "./db.js";
 
 mkdirSync(config.uploadDir, { recursive: true });
@@ -53,6 +54,7 @@ await app.register(gardenRoutes);
 await app.register(opsRoutes);
 await app.register(settingsRoutes);
 await app.register(uploadRoutes);
+await app.register(collabRoutes);
 
 const webDist = resolve(process.cwd(), "../web/dist");
 if (existsSync(webDist)) {

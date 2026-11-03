@@ -1,10 +1,20 @@
 # Hortis Android APK (Capacitor)
 
+## Braucht die APK einen Server?
+
+**Nein, nicht zwingend.** Standard ist **Local-Modus**: Daten liegen in IndexedDB auf dem Gerät.
+
+| Modus | Wann | Daten |
+|-------|------|--------|
+| **Local** | APK allein, unterwegs | nur Gerät |
+| **Server** | Homelab/VPS, Sync Familie | Self-Host-API |
+
+Umschalten in der App unter **Einstellungen → Betriebsmodus**.
+
 ## Voraussetzungen
 
 - Node 20+
 - Android Studio (SDK + Build Tools)
-- Laufende Hortis-API (z. B. `http://192.168.x.x:8787` im LAN)
 
 ## Schritte
 
@@ -22,22 +32,10 @@ npx cap sync android
 npx cap open android
 ```
 
-In Android Studio: Run / Build APK.
+Login Local: `admin@hortis.local` / `hortis-admin-change-me`
 
-## API-URL in der App
+## Optional: Server-Modus
 
-Die gebündelte Web-UI spricht relative `/api`-Pfade an. Für native APKs:
+In den App-Einstellungen API-URL setzen, z. B. `http://192.168.1.50:8787`, Modus **Server**, neu laden.
 
-1. Entweder reverse-proxy (App lädt UI+API von derselben Origin), oder
-2. In `apps/mobile/capacitor.config.ts` unter `server.url` die Hortis-URL setzen und neu syncen.
-
-Beispiel:
-
-```ts
-server: {
-  url: "http://192.168.1.50:8787",
-  cleartext: true,
-}
-```
-
-Danach erneut `npx cap sync android`.
+Oder für Dev `server.url` in `capacitor.config.ts` setzen und `npx cap sync`.

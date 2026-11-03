@@ -13,6 +13,7 @@
     "dev:web": "npm run dev -w @hortis/web",
     "build": "npm run build -w @hortis/shared && npm run build -w @hortis/care-engine && npm run build -w @hortis/garden-engine && npm run build -w @hortis/bonsai-engine && npm run build -w @hortis/api && npm run build -w @hortis/web",
     "start": "npm run start -w @hortis/api",
+    "test": "npm run test -w @hortis/care-engine && npm run test -w @hortis/garden-engine",
     "mobile:sync": "npm run build -w @hortis/web && npm run sync -w @hortis/mobile",
     "mobile:android": "npm run mobile:sync && npm run open:android -w @hortis/mobile"
   },

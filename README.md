@@ -30,6 +30,13 @@ Unter **Einstellungen**:
 - Kalender `.ics` exportieren / importieren
 - API: `POST /api/reminders/digest` sendet überfällige Pflege an alle aktiven Kanäle
 
+## Server oder nur APK?
+
+- **APK allein (Local):** ja — Daten auf dem Gerät (IndexedDB), kein Server nötig  
+- **Server + Web/APK:** empfohlen für Familie, Backup, Wetter-live, PlantNet, Push/Mail  
+
+Umschalten: **Einstellungen → Betriebsmodus**.
+
 ## Quick start (Dev)
 
 ```bash

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, getToken } from "../api";
+import { api, getApiBase, getMode, getToken, setApiBase, setMode, type AppMode } from "../api";
 import { useTheme, type ThemeId } from "../theme";
 
 type Settings = {
@@ -26,6 +26,8 @@ type Settings = {
 
 export function SettingsPage() {
   const { theme, themes, setTheme } = useTheme();
+  const [mode, setModeState] = useState<AppMode>(getMode());
+  const [apiBase, setApiBaseState] = useState(getApiBase());
   const [s, setS] = useState<Settings | null>(null);
   const [smtpPass, setSmtpPass] = useState("");
   const [telegramToken, setTelegramToken] = useState("");
@@ -142,6 +144,58 @@ export function SettingsPage() {
       </div>
 
       {msg ? <div className="badge" style={{ marginBottom: 12 }}>{msg}</div> : null}
+
+      <section className="panel stack" style={{ marginBottom: "1rem" }}>
+        <h3>Betriebsmodus</h3>
+        <p className="muted">
+          <strong>Local:</strong> APK/Gerät ohne Server (IndexedDB).{" "}
+          <strong>Server:</strong> Self-Host-API (LAN/VPS).
+        </p>
+        <div className="row">
+          <button
+            type="button"
+            className={`btn ${mode === "local" ? "" : "secondary"}`}
+            onClick={() => {
+              setMode("local");
+              setModeState("local");
+              setMsg("Local-Modus aktiv – Seite neu laden.");
+            }}
+          >
+            Local (ohne Server)
+          </button>
+          <button
+            type="button"
+            className={`btn ${mode === "server" ? "" : "secondary"}`}
+            onClick={() => {
+              setMode("server");
+              setModeState("server");
+              setMsg("Server-Modus aktiv – API-URL setzen und neu laden.");
+            }}
+          >
+            Server
+          </button>
+        </div>
+        {mode === "server" ? (
+          <label className="field">
+            API-Basis-URL (leer = gleiche Origin)
+            <input
+              value={apiBase}
+              onChange={(e) => setApiBaseState(e.target.value)}
+              placeholder="http://192.168.1.10:8787"
+            />
+          </label>
+        ) : null}
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() => {
+            setApiBase(apiBase);
+            window.location.reload();
+          }}
+        >
+          Speichern & neu laden
+        </button>
+      </section>
 
       <section className="panel stack" style={{ marginBottom: "1rem" }}>
         <h3>Theme</h3>

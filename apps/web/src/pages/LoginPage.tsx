@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { getMode } from "../api";
 import { useAuth } from "../auth";
 
 export function LoginPage() {
@@ -7,6 +8,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("hortis-admin-change-me");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const mode = getMode();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -27,6 +29,7 @@ export function LoginPage() {
         <div>
           <div className="brand">Hortis</div>
           <p className="muted">Self-hosted Pflege für Zimmer, Bonsai und Beete.</p>
+          <p className="badge">{mode === "local" ? "Local-Modus (ohne Server)" : "Server-Modus"}</p>
         </div>
         <label className="field">
           E-Mail

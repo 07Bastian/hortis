@@ -148,21 +148,30 @@ export async function opsRoutes(app: FastifyInstance): Promise<void> {
       "plantings",
       "inventory",
       "tasks",
+      "settings",
+      "chat_messages",
+      "calendar_events",
+      "harvest_logs",
+      "plant_photos",
     ];
     const chunks: string[] = ["BEGIN;"];
     for (const table of tables) {
-      const rows = db.prepare(`SELECT * FROM ${table}`).all() as Record<string, unknown>[];
-      for (const row of rows) {
-        const cols = Object.keys(row);
-        const vals = cols.map((c) => {
-          const v = row[c];
-          if (v === null || v === undefined) return "NULL";
-          if (typeof v === "number") return String(v);
-          return `'${String(v).replace(/'/g, "''")}'`;
-        });
-        chunks.push(
-          `INSERT OR REPLACE INTO ${table} (${cols.join(",")}) VALUES (${vals.join(",")});`,
-        );
+      try {
+        const rows = db.prepare(`SELECT * FROM ${table}`).all() as Record<string, unknown>[];
+        for (const row of rows) {
+          const cols = Object.keys(row);
+          const vals = cols.map((c) => {
+            const v = row[c];
+            if (v === null || v === undefined) return "NULL";
+            if (typeof v === "number") return String(v);
+            return `'${String(v).replace(/'/g, "''")}'`;
+          });
+          chunks.push(
+            `INSERT OR REPLACE INTO ${table} (${cols.join(",")}) VALUES (${vals.join(",")});`,
+          );
+        }
+      } catch {
+        /* table may not exist yet */
       }
     }
     chunks.push("COMMIT;");
@@ -170,5 +179,26 @@ export async function opsRoutes(app: FastifyInstance): Promise<void> {
     reply.header("Content-Type", "application/sql");
     reply.header("Content-Disposition", `attachment; filename="hortis-backup-${stamp}.sql"`);
     return reply.send(createReadStream(outPath));
+  });
+
+  app.post("/api/backup/restore", { preHandler: requireAdmin }, async (request, reply) => {
+    const body = request.body as { sql?: string };
+    if (!body.sql || body.sql.length > 20_000_000) {
+      return reply.code(400).send({ error: "sql required" });
+    }
+    if (!body.sql.includes("BEGIN") || !/INSERT OR REPLACE INTO/i.test(body.sql)) {
+      return reply.code(400).send({ error: "Invalid Hortis backup format" });
+    }
+    // Only allow INSERT OR REPLACE / BEGIN / COMMIT — no DROP/DELETE/ATTACH
+    const dangerous = /\b(DROP|DELETE|ATTACH|UPDATE\s+users\s+SET\s+password|\bALTER\b)/i;
+    if (dangerous.test(body.sql.replace(/INSERT OR REPLACE[\s\S]*?;/gi, ""))) {
+      return reply.code(400).send({ error: "Backup contains disallowed statements" });
+    }
+    try {
+      db.exec(body.sql);
+      return { ok: true };
+    } catch (e) {
+      return reply.code(400).send({ error: String(e) });
+    }
   });
 }

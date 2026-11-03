@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, getToken } from "../api";
+import { api, getMode, getToken } from "../api";
 import { useAuth } from "../auth";
 
 type Task = { id: string; title: string; done: boolean; dueAt: string | null };
@@ -95,6 +95,8 @@ export function OpsPage() {
     setMemberPassword("");
   }
 
+  const [restoreSql, setRestoreSql] = useState("");
+
   async function downloadBackup() {
     const res = await fetch("/api/backup", {
       headers: { Authorization: `Bearer ${getToken()}` },
@@ -107,6 +109,16 @@ export function OpsPage() {
     a.download = "hortis-backup.sql";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function restoreBackup(e: FormEvent) {
+    e.preventDefault();
+    await api("/api/backup/restore", {
+      method: "POST",
+      body: JSON.stringify({ sql: restoreSql }),
+    });
+    setRestoreSql("");
+    alert("Restore ok – bitte neu laden.");
   }
 
   return (
@@ -168,6 +180,21 @@ export function OpsPage() {
           </ul>
         </section>
       </div>
+
+      {user?.role === "admin" && getMode() === "server" ? (
+        <section className="panel stack" style={{ marginTop: "1rem" }}>
+          <h3>Backup wiederherstellen</h3>
+          <form className="stack" onSubmit={restoreBackup}>
+            <textarea
+              value={restoreSql}
+              onChange={(e) => setRestoreSql(e.target.value)}
+              rows={6}
+              placeholder="Inhalt von hortis-backup.sql einfügen"
+            />
+            <button className="btn danger">Restore ausführen</button>
+          </form>
+        </section>
+      ) : null}
 
       {user?.role === "admin" ? (
         <section className="panel stack" style={{ marginTop: "1rem" }}>

@@ -5,7 +5,14 @@ import { hashPassword, verifyPassword } from "../auth/password.js";
 import { requireAdmin, requireAuth } from "../auth/guard.js";
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
-  app.post("/api/auth/login", async (request, reply) => {
+  app.post(
+    "/api/auth/login",
+    {
+      config: {
+        rateLimit: { max: 15, timeWindow: "5 minutes" },
+      },
+    },
+    async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
 
@@ -23,7 +30,9 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         }
       | undefined;
 
+    // Constant-time-ish delay on failure path
     if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
+      await new Promise((r) => setTimeout(r, 200));
       return reply.code(401).send({ error: "Invalid credentials" });
     }
 
@@ -43,7 +52,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         displayName: user.display_name,
       },
     };
-  });
+  },
+  );
 
   app.post("/api/auth/register", { preHandler: requireAdmin }, async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);

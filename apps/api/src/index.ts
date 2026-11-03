@@ -23,7 +23,10 @@ import "./db.js";
 mkdirSync(config.uploadDir, { recursive: true });
 ensureAdminUser();
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: true,
+  bodyLimit: 12 * 1024 * 1024,
+});
 
 const corsOrigin =
   config.corsOrigin === "*"
@@ -33,6 +36,15 @@ const corsOrigin =
 await app.register(cors, {
   origin: corsOrigin,
   credentials: true,
+});
+
+app.addHook("onSend", async (_request, reply, payload) => {
+  reply.header("X-Content-Type-Options", "nosniff");
+  reply.header("X-Frame-Options", "DENY");
+  reply.header("Referrer-Policy", "no-referrer");
+  reply.header("Permissions-Policy", "camera=(self), microphone=()");
+  reply.header("X-Hortis-Mode", "server");
+  return payload;
 });
 
 await app.register(jwt, { secret: config.jwtSecret });

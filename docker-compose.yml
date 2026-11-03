@@ -1,0 +1,21 @@
+services:
+  hortis:
+    build: .
+    container_name: hortis
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      HORTIS_JWT_SECRET: ${HORTIS_JWT_SECRET:-please-change-this-secret-to-something-long}
+      HORTIS_ADMIN_EMAIL: ${HORTIS_ADMIN_EMAIL:-admin@hortis.local}
+      HORTIS_ADMIN_PASSWORD: ${HORTIS_ADMIN_PASSWORD:-hortis-admin-change-me}
+      HORTIS_CORS_ORIGIN: ${HORTIS_CORS_ORIGIN:-*}
+      HORTIS_WEATHER_LAT: ${HORTIS_WEATHER_LAT:-47.9}
+      HORTIS_WEATHER_LON: ${HORTIS_WEATHER_LON:-11.2}
+      HORTIS_DB_PATH: /data/hortis.db
+      HORTIS_UPLOAD_DIR: /data/uploads
+    volumes:
+      - hortis-data:/data
+
+volumes:
+  hortis-data:

@@ -1,0 +1,23 @@
+{
+  "name": "hortis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hortis – Zimmerpflanzen, Bonsai und Selbstversorgung in einer self-hosted App",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @hortis/api & npm run dev -w @hortis/web",
+    "dev:api": "npm run dev -w @hortis/api",
+    "dev:web": "npm run dev -w @hortis/web",
+    "build": "npm run build -w @hortis/shared && npm run build -w @hortis/care-engine && npm run build -w @hortis/garden-engine && npm run build -w @hortis/bonsai-engine && npm run build -w @hortis/api && npm run build -w @hortis/web",
+    "start": "npm run start -w @hortis/api",
+    "mobile:sync": "npm run build -w @hortis/web && npm run sync -w @hortis/mobile",
+    "mobile:android": "npm run mobile:sync && npm run open:android -w @hortis/mobile"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

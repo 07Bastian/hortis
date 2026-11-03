@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getToken } from "../api";
+import { useTheme, type ThemeId } from "../theme";
 
 type Settings = {
   weatherLat: number;
@@ -24,6 +25,7 @@ type Settings = {
 };
 
 export function SettingsPage() {
+  const { theme, themes, setTheme } = useTheme();
   const [s, setS] = useState<Settings | null>(null);
   const [smtpPass, setSmtpPass] = useState("");
   const [telegramToken, setTelegramToken] = useState("");
@@ -140,6 +142,23 @@ export function SettingsPage() {
       </div>
 
       {msg ? <div className="badge" style={{ marginBottom: 12 }}>{msg}</div> : null}
+
+      <section className="panel stack" style={{ marginBottom: "1rem" }}>
+        <h3>Theme</h3>
+        <p className="muted">Workspace-Look wie bei HortusFox — wird serverseitig gespeichert.</p>
+        <div className="theme-switch">
+          {themes.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={theme === t.id ? "active" : ""}
+              onClick={() => void setTheme(t.id as ThemeId)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <form className="grid cols-2" onSubmit={save}>
         <section className="panel stack">

@@ -23,6 +23,7 @@ export type AppSettings = {
   vapidSubject: string;
   plantNetApiKey: string;
   automationWebhookUrl: string;
+  theme: string;
 };
 
 const DEFAULTS: AppSettings = {
@@ -47,6 +48,7 @@ const DEFAULTS: AppSettings = {
   vapidSubject: "mailto:admin@hortis.local",
   plantNetApiKey: "",
   automationWebhookUrl: "",
+  theme: "forest",
 };
 
 function getRaw(key: string): string | null {
@@ -109,5 +111,6 @@ export function publicSettings() {
     hasVapidPrivate: Boolean(s.vapidPrivateKey),
     hasPlantNetKey: Boolean(s.plantNetApiKey),
     hasAutomationWebhook: Boolean(s.automationWebhookUrl),
+    theme: s.theme || "forest",
   };
 }

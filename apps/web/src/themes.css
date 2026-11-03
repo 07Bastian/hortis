@@ -1,0 +1,96 @@
+/* Hortis themes — HortusFox-style switchable workspace looks */
+
+:root,
+[data-theme="forest"] {
+  --bg0: #122016;
+  --bg1: #1b2e22;
+  --bg2: #243a2c;
+  --panel: rgba(247, 241, 230, 0.08);
+  --panel-strong: rgba(247, 241, 230, 0.14);
+  --ink: #f4efe4;
+  --muted: #b7c4b4;
+  --accent: #d4a017;
+  --accent-2: #6f9e7a;
+  --danger: #d96b5c;
+  --ok: #7fb989;
+  --line: rgba(244, 239, 228, 0.14);
+  --glow-a: #355640;
+  --glow-b: #4a3a1c;
+}
+
+[data-theme="clay"] {
+  --bg0: #2a1c16;
+  --bg1: #3a261c;
+  --bg2: #4a3226;
+  --panel: rgba(255, 236, 210, 0.08);
+  --panel-strong: rgba(255, 236, 210, 0.14);
+  --ink: #fff1e0;
+  --muted: #d2b39a;
+  --accent: #e08a3c;
+  --accent-2: #c4a484;
+  --danger: #e07060;
+  --ok: #9cba7f;
+  --line: rgba(255, 241, 224, 0.14);
+  --glow-a: #6a3c28;
+  --glow-b: #5a4820;
+}
+
+[data-theme="midnight"] {
+  --bg0: #0b1220;
+  --bg1: #121a2b;
+  --bg2: #1a2438;
+  --panel: rgba(200, 220, 255, 0.07);
+  --panel-strong: rgba(200, 220, 255, 0.14);
+  --ink: #e8eefc;
+  --muted: #9aa8c7;
+  --accent: #6ea8ff;
+  --accent-2: #7d9cc7;
+  --danger: #ff7b8a;
+  --ok: #6fd3a3;
+  --line: rgba(232, 238, 252, 0.12);
+  --glow-a: #243656;
+  --glow-b: #2a2048;
+}
+
+[data-theme="orchid"] {
+  --bg0: #1a1420;
+  --bg1: #241a2c;
+  --bg2: #302236;
+  --panel: rgba(255, 220, 240, 0.08);
+  --panel-strong: rgba(255, 220, 240, 0.14);
+  --ink: #fceef6;
+  --muted: #c9a8bd;
+  --accent: #e39ac8;
+  --accent-2: #9e7fa8;
+  --danger: #ef7a8c;
+  --ok: #8fd0a8;
+  --line: rgba(252, 238, 246, 0.14);
+  --glow-a: #4a3050;
+  --glow-b: #3a2848;
+}
+
+[data-theme="paper"] {
+  --bg0: #e7e1d4;
+  --bg1: #f0ebe1;
+  --bg2: #f7f3ea;
+  --panel: rgba(40, 50, 35, 0.06);
+  --panel-strong: rgba(40, 50, 35, 0.1);
+  --ink: #243028;
+  --muted: #5d6a60;
+  --accent: #2f6b4f;
+  --accent-2: #6b8f71;
+  --danger: #b54a3c;
+  --ok: #3f7d55;
+  --line: rgba(36, 48, 40, 0.12);
+  --glow-a: #c5d5c0;
+  --glow-b: #d8cbb0;
+  --shadow: 0 18px 40px rgba(40, 50, 35, 0.12);
+}
+
+[data-theme="paper"] .btn {
+  color: #f7f3ea;
+}
+
+[data-theme="paper"] .btn.secondary {
+  color: var(--ink);
+}

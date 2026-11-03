@@ -44,6 +44,9 @@ export function GardenPage() {
   const [harvestName, setHarvestName] = useState("");
   const [harvestWeight, setHarvestWeight] = useState(0);
   const [harvests, setHarvests] = useState<{ id: string; name: string; weightG: number | null; harvestedAt: string }[]>([]);
+  const [optCrops, setOptCrops] = useState("Tomate:solanaceae,Basilikum:lamiaceae,Bohne:fabaceae,Salat:asteraceae");
+  const [optMode, setOptMode] = useState<"fresh" | "fit">("fresh");
+  const [optResult, setOptResult] = useState<{ score: number; message: string; plantings: { name: string; x: number; y: number }[] } | null>(null);
 
   const activeBed = beds.find((b) => b.id === bedId) ?? null;
 
@@ -235,6 +238,59 @@ export function GardenPage() {
           )}
         </section>
       </div>
+
+      <section className="panel stack" style={{ marginTop: "1rem" }}>
+        <h3>Layout-Optimizer (AI-Scoring)</h3>
+        <p className="muted">
+          Beet-Anything-Stil: mischt Kulturen nach Mischkultur/Fruchtfolge über viele Versuche.
+        </p>
+        <label className="field">
+          Kulturen (Name:Familie, …)
+          <input value={optCrops} onChange={(e) => setOptCrops(e.target.value)} />
+        </label>
+        <div className="row">
+          <label className="field">
+            Modus
+            <select value={optMode} onChange={(e) => setOptMode(e.target.value as "fresh" | "fit")}>
+              <option value="fresh">Fresh Garden</option>
+              <option value="fit">Fit to Current</option>
+            </select>
+          </label>
+          <button
+            className="btn"
+            disabled={!bedId}
+            type="button"
+            onClick={() => {
+              const crops = optCrops
+                .split(",")
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((p) => {
+                  const [name, family] = p.split(":").map((x) => x.trim());
+                  return { name, family: family || name };
+                });
+              void api<{
+                score: number;
+                message: string;
+                plantings: { name: string; x: number; y: number }[];
+              }>("/api/garden/optimize", {
+                method: "POST",
+                body: JSON.stringify({ bedId, mode: optMode, crops, apply: true }),
+              }).then(async (r) => {
+                setOptResult(r);
+                await refresh();
+              });
+            }}
+          >
+            Optimieren & anwenden
+          </button>
+        </div>
+        {optResult ? (
+          <div className="badge">
+            Score {optResult.score} · {optResult.message} · {optResult.plantings.length} Kulturen
+          </div>
+        ) : null}
+      </section>
 
       <section className="panel stack" style={{ marginTop: "1rem" }}>
         <h3>Ernte-Log</h3>

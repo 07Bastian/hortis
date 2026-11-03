@@ -1,20 +1,10 @@
 :root {
-  --bg0: #122016;
-  --bg1: #1b2e22;
-  --bg2: #243a2c;
-  --panel: rgba(247, 241, 230, 0.08);
-  --panel-strong: rgba(247, 241, 230, 0.14);
-  --ink: #f4efe4;
-  --muted: #b7c4b4;
-  --accent: #d4a017;
-  --accent-2: #6f9e7a;
-  --danger: #d96b5c;
-  --ok: #7fb989;
-  --line: rgba(244, 239, 228, 0.14);
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
   --radius: 18px;
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --glow-a: #355640;
+  --glow-b: #4a3a1c;
 }
 
 * {
@@ -32,10 +22,11 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   background:
-    radial-gradient(1200px 700px at 10% -10%, #355640 0%, transparent 55%),
-    radial-gradient(900px 600px at 100% 0%, #4a3a1c 0%, transparent 45%),
-    linear-gradient(165deg, var(--bg0), var(--bg1) 45%, #15241a);
+    radial-gradient(1200px 700px at 10% -10%, var(--glow-a) 0%, transparent 55%),
+    radial-gradient(900px 600px at 100% 0%, var(--glow-b) 0%, transparent 45%),
+    linear-gradient(165deg, var(--bg0), var(--bg1) 45%, var(--bg2));
   background-attachment: fixed;
+  transition: background 0.35s ease, color 0.2s ease;
 }
 
 a {
@@ -413,6 +404,43 @@ textarea {
 
 .pillar-link h2 {
   margin-bottom: 0.35rem;
+}
+
+.progress {
+  margin-top: 0.35rem;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.progress > div {
+  height: 100%;
+  background: var(--accent-2);
+}
+
+.theme-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.theme-switch button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.theme-switch button.active {
+  background: var(--accent);
+  color: #1b1405;
+  border-color: transparent;
 }
 
 @media (max-width: 900px) {

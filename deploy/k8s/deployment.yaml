@@ -1,0 +1,102 @@
+# Optional Kubernetes deploy for Hortis (single app + PVC).
+# This is NOT Kamerplanter's multi-service cluster — only Hortis itself.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hortis
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hortis-data
+  namespace: hortis
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hortis-secrets
+  namespace: hortis
+type: Opaque
+stringData:
+  HORTIS_JWT_SECRET: "change-me-long-random-secret"
+  HORTIS_ADMIN_EMAIL: "admin@hortis.local"
+  HORTIS_ADMIN_PASSWORD: "hortis-admin-change-me"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hortis
+  namespace: hortis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hortis
+  template:
+    metadata:
+      labels:
+        app: hortis
+    spec:
+      containers:
+        - name: hortis
+          image: hortis:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8787
+          env:
+            - name: HORTIS_HOST
+              value: "0.0.0.0"
+            - name: HORTIS_PORT
+              value: "8787"
+            - name: HORTIS_DB_PATH
+              value: "/data/hortis.db"
+            - name: HORTIS_UPLOAD_DIR
+              value: "/data/uploads"
+            - name: HORTIS_CORS_ORIGIN
+              value: "*"
+            - name: HORTIS_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hortis-secrets
+                  key: HORTIS_JWT_SECRET
+            - name: HORTIS_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: hortis-secrets
+                  key: HORTIS_ADMIN_EMAIL
+            - name: HORTIS_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hortis-secrets
+                  key: HORTIS_ADMIN_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8787
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hortis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hortis
+  namespace: hortis
+spec:
+  selector:
+    app: hortis
+  ports:
+    - port: 80
+      targetPort: 8787
+  type: ClusterIP

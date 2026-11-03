@@ -32,18 +32,19 @@ Stand nach Gap-Lauf gegen HortusFox, OlsGrow, Plant-it, Gardener, Beet Anything,
 | Wetter-Standort UI | OWM | ✓ | – | ✓ | – | – | ✓ Open-Meteo |
 | Self-host Web | ✓ | ✓ | früher | PWA | PWA | ✓ | ✓ |
 | Android APK | – | Cap | Flutter | Cap | – | native | Capacitor |
-| Themes | ✓ | – | – | – | – | Modes | – |
+| Themes | ✓ | – | – | – | – | Modes | ✓ (5 Themes) |
 | Livestock | – | – | – | ✓ | – | – | bewusst nicht |
-| Nährstoff-EC / GDD voll | – | – | – | – | – | ✓ | – (schlank) |
+| Nährstoff-EC / GDD | – | – | – | – | – | ✓ | ✓ (Port, SQLite) |
 | HA Custom Integration | – | Hooks | – | – | – | ✓ | Hook-URL |
-| Layout-Optimizer AI | – | – | – | Autofill | ✓ | – | Score only |
+| Layout-Optimizer AI | – | – | – | Autofill | ✓ | – | ✓ Optimizer |
 | Krankheits-ID (Blatt) | – | ✓ | – | – | – | ✓ | via PlantNet |
+| K8s Deploy | – | – | – | – | – | ✓ | optional Hortis-only |
 
 Legende: HF HortusFox, OG OlsGrow, PI Plant-it, GA Gardener, BA Beet Anything, KP Kamerplanter.
 
 ## Bewusst nicht 1:1
 
-- Kamerplanter-Cluster (ArangoDB, Celery, Ollama, Timescale)
-- HortusFox-PHP / Themes-Engine
+- Kamerplanter-Multi-DB-Cluster (ArangoDB, Celery, Ollama, Timescale) — Domäne GDD/EC portiert
+- HortusFox-PHP-Runtime
 - Gardener-Livestock
 - Plant-it Flutter-Client (Capacitor statt dessen)

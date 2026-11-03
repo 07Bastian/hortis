@@ -28,6 +28,7 @@ const settingsPatchSchema = z.object({
   vapidSubject: z.string().max(200).optional(),
   plantNetApiKey: z.string().max(200).optional(),
   automationWebhookUrl: z.string().max(500).optional(),
+  theme: z.enum(["forest", "clay", "midnight", "orchid", "paper"]).optional(),
 });
 
 export async function settingsRoutes(app: FastifyInstance): Promise<void> {

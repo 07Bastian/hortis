@@ -14,6 +14,13 @@ Standard: **Murnau / Hof** (`47.6779, 11.2012`).
 - Oder in `.env`: `HORTIS_WEATHER_LAT` / `HORTIS_WEATHER_LON`
 - Quelle: [Open-Meteo](https://open-meteo.com/) (kein API-Key)
 
+## Themes / Grow / Optimizer
+
+- **Themes:** Forest, Clay, Midnight, Orchid, Paper (Sidebar + Einstellungen)
+- **Grow:** GDD-Phasen aus Wetter + EC-Mischrechner (`/grow`)
+- **Beet-Optimizer:** unter Garten → Layout-Optimizer (fresh / fit-to-current)
+- **K8s (optional):** nur Hortis selbst — siehe [docs/k8s.md](docs/k8s.md)
+
 ## Benachrichtigungen & Kalender
 
 Unter **Einstellungen**:

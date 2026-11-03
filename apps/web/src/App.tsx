@@ -9,9 +9,12 @@ import { OpsPage } from "./pages/OpsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { GuidesPage } from "./pages/GuidesPage";
 import { CollabPage } from "./pages/CollabPage";
+import { GrowPage } from "./pages/GrowPage";
+import { useTheme } from "./theme";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const { theme, themes, setTheme } = useTheme();
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -22,11 +25,24 @@ function Shell({ children }: { children: React.ReactNode }) {
           <NavLink to="/indoor">Zimmer</NavLink>
           <NavLink to="/bonsai">Bonsai</NavLink>
           <NavLink to="/garden">Garten</NavLink>
+          <NavLink to="/grow">Grow</NavLink>
           <NavLink to="/guides">Guides</NavLink>
           <NavLink to="/collab">Kollaboration</NavLink>
           <NavLink to="/ops">Aufgaben</NavLink>
           <NavLink to="/settings">Einstellungen</NavLink>
         </nav>
+        <div className="theme-switch">
+          {themes.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={theme === t.id ? "active" : ""}
+              onClick={() => void setTheme(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <div className="auth-meta">
           <div>{user?.displayName}</div>
           <div className="muted">{user?.email}</div>
@@ -52,6 +68,7 @@ export function App() {
         <Route path="/indoor" element={<IndoorPage />} />
         <Route path="/bonsai" element={<BonsaiPage />} />
         <Route path="/garden" element={<GardenPage />} />
+        <Route path="/grow" element={<GrowPage />} />
         <Route path="/guides" element={<GuidesPage />} />
         <Route path="/collab" element={<CollabPage />} />
         <Route path="/ops" element={<OpsPage />} />

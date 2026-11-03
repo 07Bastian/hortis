@@ -132,6 +132,63 @@ Saatgut-Inventar mit Menge, Familie und Erntejahr – vor der Beetplanung prüfe
 
 Überfällige Pflege kann unter Einstellungen als Testnachricht ausgelöst werden.`,
   },
+  {
+    id: "local-sync",
+    pillar: "general",
+    title: "Local-Modus & Sync",
+    summary: "APK ohne Server, Push/Pull zum Homelab.",
+    body: `## Local
+Daten liegen in IndexedDB. Standard auf der APK.
+
+## Sync
+Einstellungen → Sync: Local→Server pushen, Server→Local ziehen, oder JSON-Datei.
+
+Format: \`hortis-sync-v1\`.`,
+  },
+  {
+    id: "garden-rotation-suggest",
+    pillar: "garden",
+    title: "Fruchtfolge-Vorschläge",
+    summary: "Nächste Saison nach Blatt→Frucht→Wurzel→Leguminose.",
+    body: `## Regel
+Familien 3 Jahre meiden. Zyklus: Leguminose → Blatt → Frucht → Wurzel.
+
+Vorschläge nutzen zuerst Saatgut im Besitz, sonst den Sortenkatalog. Unter Garten → Fruchtfolge-Vorschläge übernehmen.`,
+  },
+  {
+    id: "garden-seed-generations",
+    pillar: "garden",
+    title: "Saatgut-Generationen",
+    summary: "Kauf, Vermehrung, Lizenz, DE/EN/Latein.",
+    body: `## Felder
+- Namen DE / EN / Latein
+- Lizenz: op, f1, oss, pvr
+- Gekauft am, Vermehrt am, Generation, Elternsaat
+
+„Vermehren“ legt Generation+1 an. F1 sollte nicht weitervermehrt werden.`,
+  },
+  {
+    id: "disease-gbif",
+    pillar: "general",
+    title: "Krankheits-Check & GBIF",
+    summary: "PlantNet Blattmodus und Arten-Anreicherung.",
+    body: `## Krankheit
+Kollaboration → identify → Krankheit (Blatt). Keine Diagnose, nur Art-/Hinweis.
+
+## GBIF
+Kollaboration → gbif: wissenschaftliche und vernakuläre Namen suchen.`,
+  },
+  {
+    id: "pwa-proxy",
+    pillar: "general",
+    title: "PWA & HTTPS-Proxy",
+    summary: "Installierbare Web-App hinter Caddy/nginx.",
+    body: `## PWA
+Browser „Installieren“ / Manifest. Offline-Shell über Service Worker.
+
+## Proxy
+Siehe docs/proxy.md – TLS vor Port 8787.`,
+  },
 ];
 
 export function getGuide(id: string): Guide | undefined {

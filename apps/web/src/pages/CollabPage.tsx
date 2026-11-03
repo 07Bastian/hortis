@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, getToken } from "../api";
+import { api, getApiBase, getMode, getToken } from "../api";
 
 type ChatMsg = { id: string; displayName: string; body: string; createdAt: string };
 type CalEvent = {
@@ -12,7 +12,9 @@ type CalEvent = {
 type Hist = { id: string; reason: string; archivedAt: string; plant: { name: string; kind: string } };
 
 export function CollabPage() {
-  const [tab, setTab] = useState<"search" | "chat" | "calendar" | "history" | "identify">("search");
+  const [tab, setTab] = useState<"search" | "chat" | "calendar" | "history" | "identify" | "gbif">(
+    "search",
+  );
   const [q, setQ] = useState("");
   const [search, setSearch] = useState<{
     plants: { id: string; name: string; kind: string }[];
@@ -26,6 +28,11 @@ export function CollabPage() {
   const [calFrom, setCalFrom] = useState(new Date().toISOString().slice(0, 10));
   const [history, setHistory] = useState<Hist[]>([]);
   const [identify, setIdentify] = useState<string>("");
+  const [idMode, setIdMode] = useState<"plant" | "disease">("plant");
+  const [gbifQ, setGbifQ] = useState("");
+  const [gbifHits, setGbifHits] = useState<
+    { scientificName: string; vernacularName: string; rank: string }[]
+  >([]);
 
   async function loadChat() {
     const res = await api<{ messages: ChatMsg[] }>("/api/chat");
@@ -78,7 +85,8 @@ export function CollabPage() {
   async function identifyFile(file: File) {
     const body = new FormData();
     body.append("file", file);
-    const res = await fetch("/api/identify", {
+    const base = getMode() === "server" ? getApiBase() : "";
+    const res = await fetch(`${base}/api/identify?mode=${idMode}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${getToken()}` },
       body,
@@ -88,16 +96,29 @@ export function CollabPage() {
       setIdentify(data.error || "Fehler");
       return;
     }
+    const tip = data.tip ? `${data.tip}\n\n` : "";
     const results = data.result?.results?.slice(0, 5) || [];
     setIdentify(
-      results
-        .map(
-          (r: { score: number; species: { scientificNameWithoutAuthor: string; commonNames?: string[] } }) =>
-            `${Math.round(r.score * 100)}% · ${r.species.scientificNameWithoutAuthor}` +
-            (r.species.commonNames?.[0] ? ` (${r.species.commonNames[0]})` : ""),
-        )
-        .join("\n") || "Keine Treffer",
+      tip +
+        (results
+          .map(
+            (r: {
+              score: number;
+              species: { scientificNameWithoutAuthor: string; commonNames?: string[] };
+            }) =>
+              `${Math.round(r.score * 100)}% · ${r.species.scientificNameWithoutAuthor}` +
+              (r.species.commonNames?.[0] ? ` (${r.species.commonNames[0]})` : ""),
+          )
+          .join("\n") || "Keine Treffer"),
     );
+  }
+
+  async function searchGbif(e: FormEvent) {
+    e.preventDefault();
+    const res = await api<{
+      results: { scientificName: string; vernacularName: string; rank: string }[];
+    }>(`/api/species/gbif?q=${encodeURIComponent(gbifQ)}`);
+    setGbifHits(res.results);
   }
 
   return (
@@ -109,7 +130,7 @@ export function CollabPage() {
         </div>
       </div>
       <div className="row" style={{ marginBottom: 12 }}>
-        {(["search", "chat", "calendar", "history", "identify"] as const).map((t) => (
+        {(["search", "chat", "calendar", "history", "identify", "gbif"] as const).map((t) => (
           <button
             key={t}
             className={`btn ${tab === t ? "" : "secondary"}`}
@@ -223,7 +244,25 @@ export function CollabPage() {
 
       {tab === "identify" ? (
         <section className="panel stack">
-          <p className="muted">Braucht PlantNet-API-Key in den Einstellungen (wie HortusFox).</p>
+          <p className="muted">
+            PlantNet-API-Key in den Einstellungen. Krankheitsmodus nutzt Blatt-Organ + Hinweis-Guide.
+          </p>
+          <div className="row">
+            <button
+              type="button"
+              className={`btn ${idMode === "plant" ? "" : "secondary"}`}
+              onClick={() => setIdMode("plant")}
+            >
+              Art
+            </button>
+            <button
+              type="button"
+              className={`btn ${idMode === "disease" ? "" : "secondary"}`}
+              onClick={() => setIdMode("disease")}
+            >
+              Krankheit (Blatt)
+            </button>
+          </div>
           <input
             type="file"
             accept="image/*"
@@ -233,6 +272,30 @@ export function CollabPage() {
             }}
           />
           <pre className="guide-md">{identify || "Noch kein Ergebnis."}</pre>
+        </section>
+      ) : null}
+
+      {tab === "gbif" ? (
+        <section className="panel stack">
+          <p className="muted">Artennamen über GBIF anreichern (wissenschaftlich / vernakulär).</p>
+          <form className="row" onSubmit={searchGbif}>
+            <label className="field">
+              Art / Name
+              <input value={gbifQ} onChange={(e) => setGbifQ(e.target.value)} required minLength={2} />
+            </label>
+            <button className="btn">GBIF suchen</button>
+          </form>
+          <ul className="list">
+            {gbifHits.map((h, i) => (
+              <li key={`${h.scientificName}-${i}`}>
+                <span>
+                  <strong>{h.scientificName}</strong>
+                  {h.vernacularName ? ` · ${h.vernacularName}` : ""}
+                </span>
+                <span className="badge">{h.rank}</span>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
     </div>

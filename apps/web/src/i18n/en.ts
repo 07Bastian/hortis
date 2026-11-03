@@ -1,0 +1,51 @@
+import type { Dict } from "./de";
+
+export const en: Dict = {
+  brandSub: "Collection · Care · Beds",
+  nav: {
+    home: "Overview",
+    indoor: "Indoor",
+    bonsai: "Bonsai",
+    garden: "Garden",
+    grow: "Grow",
+    guides: "Guides",
+    collab: "Collaborate",
+    ops: "Tasks",
+    settings: "Settings",
+  },
+  logout: "Log out",
+  loading: "Loading Hortis…",
+  login: {
+    title: "Sign in",
+    email: "Email",
+    password: "Password",
+    submit: "Sign in",
+    localHint: "Local mode: admin@hortis.local / hortis-admin-change-me",
+  },
+  mode: {
+    title: "Operation mode",
+    local: "Local (no server)",
+    server: "Server",
+    hint: "Local: APK/device without server (IndexedDB). Server: sync, push, PlantNet via homelab.",
+  },
+  sync: {
+    title: "Sync & backup",
+    push: "Push local → server",
+    pull: "Pull server → local",
+    exportFile: "Export JSON",
+    importFile: "Import JSON",
+  },
+  garden: {
+    title: "Garden & food growing",
+    subtitle: "Beds, seeds, rotation and cultivar catalog",
+    seeds: "Seeds in stock",
+    catalog: "Cultivar catalog",
+    suggest: "Rotation suggestions",
+    applySuggest: "Apply suggestions",
+    propagate: "Propagate",
+    generation: "Generation",
+    license: "License",
+  },
+  install: "Install app",
+  lang: "Language",
+};

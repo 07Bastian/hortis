@@ -258,4 +258,21 @@ export function migrate(db: DatabaseSync): void {
   for (const [col, def] of bonsaiExtras) {
     if (!bonsaiNames.has(col)) db.exec(`ALTER TABLE bonsai_profiles ADD COLUMN ${col} ${def}`);
   }
+
+  const seedCols = db.prepare(`PRAGMA table_info(seeds)`).all() as { name: string }[];
+  const seedNames = new Set(seedCols.map((c) => c.name));
+  const seedExtras: [string, string][] = [
+    ["name_de", "TEXT NOT NULL DEFAULT ''"],
+    ["name_en", "TEXT NOT NULL DEFAULT ''"],
+    ["name_latin", "TEXT NOT NULL DEFAULT ''"],
+    ["license", "TEXT NOT NULL DEFAULT 'unknown'"],
+    ["purchased_at", "TEXT"],
+    ["propagated_at", "TEXT"],
+    ["generation", "INTEGER NOT NULL DEFAULT 0"],
+    ["parent_seed_id", "TEXT"],
+    ["cultivar_id", "TEXT"],
+  ];
+  for (const [col, def] of seedExtras) {
+    if (!seedNames.has(col)) db.exec(`ALTER TABLE seeds ADD COLUMN ${col} ${def}`);
+  }
 }

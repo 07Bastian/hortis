@@ -269,6 +269,32 @@ export async function collabRoutes(app: FastifyInstance): Promise<void> {
     return { harvests: rows };
   });
 
+  app.get("/api/species/gbif", { preHandler: requireAuth }, async (request, reply) => {
+    const { q } = request.query as { q?: string };
+    const term = (q || "").trim();
+    if (term.length < 2) return reply.code(400).send({ error: "q min 2 chars" });
+    const url = `https://api.gbif.org/v1/species/suggest?q=${encodeURIComponent(term)}&limit=12`;
+    const res = await fetch(url);
+    if (!res.ok) return reply.code(502).send({ error: `GBIF ${res.status}` });
+    const data = (await res.json()) as Array<{
+      key?: number;
+      scientificName?: string;
+      canonicalName?: string;
+      vernacularName?: string;
+      rank?: string;
+      kingdom?: string;
+    }>;
+    return {
+      results: (Array.isArray(data) ? data : []).map((r) => ({
+        key: r.key,
+        scientificName: r.scientificName || r.canonicalName || "",
+        vernacularName: r.vernacularName || "",
+        rank: r.rank || "",
+        kingdom: r.kingdom || "",
+      })),
+    };
+  });
+
   app.post("/api/identify", { preHandler: requireAuth }, async (request, reply) => {
     const s = getSettings();
     if (!s.plantNetApiKey) {
@@ -276,6 +302,8 @@ export async function collabRoutes(app: FastifyInstance): Promise<void> {
         error: "PlantNet API-Key fehlt (Einstellungen → plantNetApiKey)",
       });
     }
+    const mode = String((request.query as { mode?: string }).mode || "plant");
+    const organ = mode === "disease" ? "leaf" : "auto";
     const file = await request.file();
     if (!file) return reply.code(400).send({ error: "image required" });
     const chunks: Buffer[] = [];
@@ -286,7 +314,7 @@ export async function collabRoutes(app: FastifyInstance): Promise<void> {
       type: file.mimetype || "image/jpeg",
     });
     form.append("images", blob, file.filename || "plant.jpg");
-    form.append("organs", "auto");
+    form.append("organs", organ);
     const res = await fetch(
       `https://my-api.plantnet.org/v2/identify/all?api-key=${encodeURIComponent(s.plantNetApiKey)}`,
       { method: "POST", body: form },
@@ -295,7 +323,15 @@ export async function collabRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(502).send({ error: `PlantNet ${res.status}`, detail: await res.text() });
     }
     const data = await res.json();
-    return { result: data };
+    return {
+      mode,
+      organ,
+      tip:
+        mode === "disease"
+          ? "Vergleiche Blattflecken mit Guides. PlantNet liefert Art-Hinweise, keine medizinische Diagnose."
+          : undefined,
+      result: data,
+    };
   });
 
   app.get("/api/tokens", { preHandler: requireAdmin }, async () => {

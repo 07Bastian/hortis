@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, getToken } from "../api";
+import { api, getMode, getToken } from "../api";
 
 type Location = { id: string; name: string; kind: string };
 type Plant = {
@@ -127,14 +127,27 @@ export function IndoorPage() {
 
   async function uploadPhoto(file: File) {
     if (!selected) return;
-    const body = new FormData();
-    body.append("file", file);
-    const res = await fetch(`/api/plants/${selected.id}/photos`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}` },
-      body,
-    });
-    if (!res.ok) throw new Error("Upload fehlgeschlagen");
+    if (getMode() === "local") {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      await api(`/api/plants/${selected.id}/photos`, {
+        method: "POST",
+        body: JSON.stringify({ dataUrl }),
+      });
+    } else {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch(`/api/plants/${selected.id}/photos`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+        body,
+      });
+      if (!res.ok) throw new Error("Upload fehlgeschlagen");
+    }
     const ph = await api<{ photos: typeof photos }>(`/api/plants/${selected.id}/photos`);
     setPhotos(ph.photos);
     await openPlant({ ...selected });

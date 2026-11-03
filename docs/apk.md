@@ -2,40 +2,32 @@
 
 ## Braucht die APK einen Server?
 
-**Nein, nicht zwingend.** Standard ist **Local-Modus**: Daten liegen in IndexedDB auf dem Gerät.
+**Nein.** Standard ist **Local-Modus** (IndexedDB). Optional Server-Sync unter Einstellungen.
 
-| Modus | Wann | Daten |
-|-------|------|--------|
-| **Local** | APK allein, unterwegs | nur Gerät |
-| **Server** | Homelab/VPS, Sync Familie | Self-Host-API |
+## Build
 
-Umschalten in der App unter **Einstellungen → Betriebsmodus**.
-
-## Voraussetzungen
-
-- Node 20+
-- Android Studio (SDK + Build Tools)
-
-## Schritte
+`apps/mobile/android/` wird lokal erzeugt (nicht im Git) und mit Cap sync befüllt.
 
 ```bash
 npm install
-npm run build -w @hortis/shared
-npm run build -w @hortis/care-engine
-npm run build -w @hortis/garden-engine
-npm run build -w @hortis/bonsai-engine
-npm run build -w @hortis/web
+npm run build
 npm install -w @hortis/mobile
 cd apps/mobile
-npx cap add android   # einmalig
+npx cap add android   # einmalig, falls android/ fehlt
 npx cap sync android
 npx cap open android
 ```
 
+In Android Studio: Build → Build APK(s) / Generate Signed Bundle.
+
 Login Local: `admin@hortis.local` / `hortis-admin-change-me`
 
-## Optional: Server-Modus
+## Sync
 
-In den App-Einstellungen API-URL setzen, z. B. `http://192.168.1.50:8787`, Modus **Server**, neu laden.
+1. Server erreichbar machen (LAN-IP + Port oder HTTPS).
+2. Einstellungen → Betriebsmodus **Server**, API-URL setzen.
+3. Oder Local lassen und **Local → Server pushen** (Admin-Token/Login auf Server).
 
-Oder für Dev `server.url` in `capacitor.config.ts` setzen und `npx cap sync`.
+## Signing
+
+Release-Keystore in Android Studio anlegen; Debug-APK nur für Tests.

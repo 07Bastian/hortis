@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { useI18n } from "../i18n/context";
 
 type Bed = {
   id: string;
@@ -8,7 +9,22 @@ type Bed = {
   heightCells: number;
   year: number;
 };
-type Seed = { id: string; name: string; family: string; quantity: number; unit: string };
+type Seed = {
+  id: string;
+  name: string;
+  nameDe?: string;
+  nameEn?: string;
+  nameLatin?: string;
+  family: string;
+  quantity: number;
+  unit: string;
+  license?: string;
+  purchasedAt?: string | null;
+  propagatedAt?: string | null;
+  generation?: number;
+  cultivarId?: string | null;
+  parentSeedId?: string | null;
+};
 type Planting = {
   id: string;
   bedId: string;
@@ -21,8 +37,34 @@ type Planting = {
   year: number;
   phase: string;
 };
+type Cultivar = {
+  id: string;
+  nameDe: string;
+  nameEn: string;
+  nameLatin: string;
+  family: string;
+  cropGroup: string;
+  defaultLicense: string;
+};
+type Suggestion = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name: string;
+  nameDe: string;
+  nameEn: string;
+  nameLatin: string;
+  family: string;
+  cropGroup: string;
+  seedId: string | null;
+  cultivarId: string | null;
+  reason: string;
+  score: number;
+};
 
 export function GardenPage() {
+  const { t, lang } = useI18n();
   const year = new Date().getFullYear();
   const [beds, setBeds] = useState<Bed[]>([]);
   const [seeds, setSeeds] = useState<Seed[]>([]);
@@ -33,20 +75,36 @@ export function GardenPage() {
     rotation: { message: string; severity: string }[];
     companions: { message: string; relation: string }[];
   } | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const [bedName, setBedName] = useState("");
-  const [seedName, setSeedName] = useState("");
+  const [catalogQ, setCatalogQ] = useState("");
+  const [catalog, setCatalog] = useState<Cultivar[]>([]);
+  const [seedNameDe, setSeedNameDe] = useState("");
+  const [seedNameEn, setSeedNameEn] = useState("");
+  const [seedLatin, setSeedLatin] = useState("");
   const [seedFamily, setSeedFamily] = useState("solanaceae");
+  const [seedLicense, setSeedLicense] = useState("op");
+  const [seedPurchased, setSeedPurchased] = useState("");
+  const [seedCultivarId, setSeedCultivarId] = useState<string | null>(null);
   const [plantName, setPlantName] = useState("");
   const [plantFamily, setPlantFamily] = useState("solanaceae");
   const [cellX, setCellX] = useState(0);
   const [cellY, setCellY] = useState(0);
   const [harvestName, setHarvestName] = useState("");
   const [harvestWeight, setHarvestWeight] = useState(0);
-  const [harvests, setHarvests] = useState<{ id: string; name: string; weightG: number | null; harvestedAt: string }[]>([]);
-  const [optCrops, setOptCrops] = useState("Tomate:solanaceae,Basilikum:lamiaceae,Bohne:fabaceae,Salat:asteraceae");
+  const [harvests, setHarvests] = useState<
+    { id: string; name: string; weightG: number | null; harvestedAt: string }[]
+  >([]);
+  const [optCrops, setOptCrops] = useState(
+    "Tomate:solanaceae,Basilikum:lamiaceae,Bohne:fabaceae,Salat:asteraceae",
+  );
   const [optMode, setOptMode] = useState<"fresh" | "fit">("fresh");
-  const [optResult, setOptResult] = useState<{ score: number; message: string; plantings: { name: string; x: number; y: number }[] } | null>(null);
+  const [optResult, setOptResult] = useState<{
+    score: number;
+    message: string;
+    plantings: { name: string; x: number; y: number }[];
+  } | null>(null);
 
   const activeBed = beds.find((b) => b.id === bedId) ?? null;
 
@@ -92,12 +150,31 @@ export function GardenPage() {
     setAnalysis(a);
   }
 
+  async function loadSuggestions(id: string) {
+    const res = await api<{ suggestions: Suggestion[] }>(
+      `/api/garden/rotation-suggest?bedId=${id}&year=${year}`,
+    );
+    setSuggestions(res.suggestions);
+  }
+
+  async function searchCatalog(q: string) {
+    setCatalogQ(q);
+    const res = await api<{ cultivars: Cultivar[] }>(
+      `/api/cultivars?q=${encodeURIComponent(q)}`,
+    );
+    setCatalog(res.cultivars);
+  }
+
   useEffect(() => {
     void refresh();
+    void searchCatalog("");
   }, []);
 
   useEffect(() => {
-    if (bedId) void loadAnalysis(bedId);
+    if (bedId) {
+      void loadAnalysis(bedId);
+      void loadSuggestions(bedId);
+    }
   }, [bedId, plantings]);
 
   async function addBed(e: FormEvent) {
@@ -117,20 +194,67 @@ export function GardenPage() {
     setBedId(res.bed.id);
   }
 
+  function pickCultivar(c: Cultivar) {
+    setSeedNameDe(c.nameDe);
+    setSeedNameEn(c.nameEn);
+    setSeedLatin(c.nameLatin);
+    setSeedFamily(c.family);
+    setSeedLicense(c.defaultLicense);
+    setSeedCultivarId(c.id);
+  }
+
   async function addSeed(e: FormEvent) {
     e.preventDefault();
     await api("/api/seeds", {
       method: "POST",
       body: JSON.stringify({
-        name: seedName,
+        name: seedNameDe || seedNameEn || seedLatin,
+        nameDe: seedNameDe,
+        nameEn: seedNameEn,
+        nameLatin: seedLatin,
         family: seedFamily,
-        species: "",
+        species: seedLatin,
         quantity: 1,
         unit: "pkt",
+        license: seedLicense,
+        purchasedAt: seedPurchased || null,
+        generation: 0,
+        cultivarId: seedCultivarId,
         notes: "",
       }),
     });
-    setSeedName("");
+    setSeedNameDe("");
+    setSeedNameEn("");
+    setSeedLatin("");
+    setSeedCultivarId(null);
+    setSeedPurchased("");
+    await refresh();
+  }
+
+  async function propagate(id: string) {
+    await api(`/api/seeds/${id}/propagate`, { method: "POST" });
+    await refresh();
+  }
+
+  async function applySuggestions() {
+    if (!bedId) return;
+    for (const s of suggestions.slice(0, 12)) {
+      await api("/api/plantings", {
+        method: "POST",
+        body: JSON.stringify({
+          bedId,
+          seedId: s.seedId,
+          name: lang === "en" ? s.nameEn : s.nameDe,
+          family: s.family,
+          x: s.x,
+          y: s.y,
+          w: s.w,
+          h: s.h,
+          year,
+          phase: "planned",
+        }),
+      });
+    }
     await refresh();
   }
 
@@ -159,8 +283,8 @@ export function GardenPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Garten & Selbstversorgung</h1>
-          <p>Beete, Saatgut, Fruchtfolge und Mischkultur (Gardener / Beet Anything).</p>
+          <h1>{t.garden.title}</h1>
+          <p>{t.garden.subtitle}</p>
         </div>
       </div>
 
@@ -187,25 +311,23 @@ export function GardenPage() {
         </section>
 
         <section className="panel stack">
-          <h3>Saatgut</h3>
-          <form className="stack" onSubmit={addSeed}>
-            <label className="field">
-              Name
-              <input value={seedName} onChange={(e) => setSeedName(e.target.value)} required />
-            </label>
-            <label className="field">
-              Familie
-              <input value={seedFamily} onChange={(e) => setSeedFamily(e.target.value)} />
-            </label>
-            <button className="btn">Eintragen</button>
-          </form>
-          <ul className="list">
-            {seeds.map((s) => (
-              <li key={s.id}>
-                <span>{s.name}</span>
-                <span className="badge">
-                  {s.quantity} {s.unit}
-                </span>
+          <h3>{t.garden.catalog}</h3>
+          <label className="field">
+            Suche DE / EN / Latein
+            <input
+              value={catalogQ}
+              onChange={(e) => void searchCatalog(e.target.value)}
+              placeholder="Tomate, pea, Solanum…"
+            />
+          </label>
+          <ul className="list compact">
+            {catalog.slice(0, 8).map((c) => (
+              <li key={c.id}>
+                <button type="button" className="linkish" onClick={() => pickCultivar(c)}>
+                  <strong>{lang === "en" ? c.nameEn : c.nameDe}</strong>
+                  <span className="muted"> · {c.nameLatin}</span>
+                </button>
+                <span className="badge">{c.defaultLicense}</span>
               </li>
             ))}
           </ul>
@@ -240,10 +362,93 @@ export function GardenPage() {
       </div>
 
       <section className="panel stack" style={{ marginTop: "1rem" }}>
-        <h3>Layout-Optimizer (AI-Scoring)</h3>
-        <p className="muted">
-          Beet-Anything-Stil: mischt Kulturen nach Mischkultur/Fruchtfolge über viele Versuche.
-        </p>
+        <h3>{t.garden.seeds}</h3>
+        <form className="grid cols-3" onSubmit={addSeed}>
+          <label className="field">
+            Name DE
+            <input value={seedNameDe} onChange={(e) => setSeedNameDe(e.target.value)} required />
+          </label>
+          <label className="field">
+            Name EN
+            <input value={seedNameEn} onChange={(e) => setSeedNameEn(e.target.value)} />
+          </label>
+          <label className="field">
+            Latein
+            <input value={seedLatin} onChange={(e) => setSeedLatin(e.target.value)} />
+          </label>
+          <label className="field">
+            Familie
+            <input value={seedFamily} onChange={(e) => setSeedFamily(e.target.value)} />
+          </label>
+          <label className="field">
+            {t.garden.license}
+            <select value={seedLicense} onChange={(e) => setSeedLicense(e.target.value)}>
+              <option value="op">op (offen abblühend)</option>
+              <option value="f1">f1</option>
+              <option value="oss">oss</option>
+              <option value="pvr">pvr</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </label>
+          <label className="field">
+            Gekauft am
+            <input
+              type="date"
+              value={seedPurchased}
+              onChange={(e) => setSeedPurchased(e.target.value)}
+            />
+          </label>
+          <button className="btn">Eintragen</button>
+        </form>
+        <ul className="list">
+          {seeds.map((s) => (
+            <li key={s.id}>
+              <div>
+                <strong>{lang === "en" ? s.nameEn || s.name : s.nameDe || s.name}</strong>
+                <div className="muted small">
+                  {s.nameLatin || s.name} · {s.family} · {t.garden.generation}{" "}
+                  {s.generation ?? 0}
+                  {s.purchasedAt ? ` · Kauf ${s.purchasedAt}` : ""}
+                  {s.propagatedAt ? ` · Vermehrt ${s.propagatedAt}` : ""}
+                </div>
+              </div>
+              <div className="row">
+                <span className="badge">{s.license || "—"}</span>
+                <span className="badge">
+                  {s.quantity} {s.unit}
+                </span>
+                <button type="button" className="btn secondary" onClick={() => void propagate(s.id)}>
+                  {t.garden.propagate}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="panel stack" style={{ marginTop: "1rem" }}>
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <h3>{t.garden.suggest}</h3>
+          <button className="btn" type="button" disabled={!bedId || !suggestions.length} onClick={() => void applySuggestions()}>
+            {t.garden.applySuggest}
+          </button>
+        </div>
+        <ul className="list">
+          {suggestions.slice(0, 10).map((s, i) => (
+            <li key={`${s.x}-${s.y}-${i}`}>
+              <span>
+                ({s.x},{s.y}) {lang === "en" ? s.nameEn : s.nameDe}{" "}
+                <span className="muted">· {s.nameLatin}</span>
+                <div className="muted small">{s.reason}</div>
+              </span>
+              <span className="badge">{s.cropGroup}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="panel stack" style={{ marginTop: "1rem" }}>
+        <h3>Layout-Optimizer</h3>
         <label className="field">
           Kulturen (Name:Familie, …)
           <input value={optCrops} onChange={(e) => setOptCrops(e.target.value)} />

@@ -117,6 +117,15 @@ export function mapSeed(row: Record<string, unknown>): SeedItem {
     unit: str(row.unit),
     yearHarvested: numNull(row.year_harvested),
     notes: str(row.notes),
+    nameDe: str(row.name_de, str(row.name)),
+    nameEn: str(row.name_en),
+    nameLatin: str(row.name_latin, str(row.species)),
+    license: str(row.license, "unknown"),
+    purchasedAt: strNull(row.purchased_at),
+    propagatedAt: strNull(row.propagated_at),
+    generation: num(row.generation, 0),
+    parentSeedId: strNull(row.parent_seed_id),
+    cultivarId: strNull(row.cultivar_id),
   };
 }
 

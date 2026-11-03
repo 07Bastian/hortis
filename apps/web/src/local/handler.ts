@@ -1,4 +1,14 @@
+import { computeReminderStatus } from "@hortis/care-engine";
+import {
+  companionWarnings,
+  layoutScore,
+  optimizeLayout,
+  rotationWarnings,
+  searchCultivars,
+  suggestRotation,
+} from "@hortis/garden-engine";
 import { loadDb, saveDb, uid, type LocalDb } from "./store";
+import { applySnapshotToLocal, buildLocalSnapshot, type HortisSyncV1 } from "./sync";
 
 type Res = { status: number; body?: unknown };
 
@@ -98,15 +108,42 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
   }
 
   if (p === "/api/weather") {
-    return ok({
-      lat: db.settings.weatherLat,
-      lon: db.settings.weatherLon,
-      label: db.settings.weatherLabel,
-      temperatureC: null,
-      rainMmNext24h: 0,
-      weatherCode: null,
-      source: "local-offline",
-    });
+    const lat = Number(db.settings.weatherLat ?? 47.6779);
+    const lon = Number(db.settings.weatherLon ?? 11.2012);
+    const label = String(db.settings.weatherLabel || "Murnau / Hof");
+    try {
+      const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}` +
+        `&longitude=${lon}&current=temperature_2m,weather_code` +
+        `&hourly=precipitation&forecast_days=1&timezone=auto`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("weather");
+      const data = (await res.json()) as {
+        current?: { temperature_2m?: number; weather_code?: number };
+        hourly?: { precipitation?: number[] };
+      };
+      const precip = data.hourly?.precipitation?.slice(0, 24) ?? [];
+      const rainMm = precip.reduce((a, b) => a + (b || 0), 0);
+      return ok({
+        lat,
+        lon,
+        label,
+        temperatureC: data.current?.temperature_2m ?? null,
+        rainMmNext24h: Math.round(rainMm * 10) / 10,
+        weatherCode: data.current?.weather_code ?? null,
+        source: "open-meteo-direct",
+      });
+    } catch {
+      return ok({
+        lat,
+        lon,
+        label,
+        temperatureC: null,
+        rainMmNext24h: 0,
+        weatherCode: null,
+        source: "local-offline",
+      });
+    }
   }
 
   if (p === "/api/locations" && method === "GET") return ok({ locations: db.locations });
@@ -199,7 +236,39 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
   }
 
   if (p === "/api/reminders/status") {
-    return ok({ rainMmNext24h: 0, statuses: [] });
+    let rain = 0;
+    try {
+      const w = await handleLocal("/api/weather");
+      rain = Number((w.body as { rainMmNext24h?: number })?.rainMmNext24h || 0);
+    } catch {
+      /* ignore */
+    }
+    const statuses = db.reminders
+      .filter((r) => r.active !== false)
+      .map((r) =>
+        computeReminderStatus(
+          {
+            id: String(r.id),
+            plantId: String(r.plantId),
+            eventType: r.eventType as never,
+            intervalDays: Number(r.intervalDays || 4),
+            rainAware: Boolean(r.rainAware),
+            active: true,
+          },
+          db.events.map((e) => ({
+            id: String(e.id),
+            plantId: String(e.plantId),
+            eventType: e.eventType as never,
+            note: String(e.note || ""),
+            photoPath: null,
+            performedAt: String(e.performedAt),
+            performedBy: String(e.performedBy || ""),
+          })),
+          new Date(),
+          rain,
+        ),
+      );
+    return ok({ rainMmNext24h: rain, statuses });
   }
   if (p === "/api/reminders" && method === "GET") return ok({ reminders: db.reminders });
   if (p === "/api/reminders" && method === "POST") {
@@ -253,7 +322,46 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
   }
   if (p === "/api/seeds" && method === "GET") return ok({ seeds: db.seeds });
   if (p === "/api/seeds" && method === "POST") {
-    const seed = { id: uid(), ...body };
+    const seed = {
+      id: uid(),
+      name: body?.name || body?.nameDe || "Saat",
+      species: body?.species || body?.nameLatin || "",
+      family: body?.family || "",
+      quantity: body?.quantity ?? 1,
+      unit: body?.unit || "pkt",
+      yearHarvested: body?.yearHarvested ?? null,
+      notes: body?.notes || "",
+      nameDe: body?.nameDe || body?.name || "",
+      nameEn: body?.nameEn || "",
+      nameLatin: body?.nameLatin || body?.species || "",
+      license: body?.license || "unknown",
+      purchasedAt: body?.purchasedAt ?? null,
+      propagatedAt: body?.propagatedAt ?? null,
+      generation: body?.generation ?? 0,
+      parentSeedId: body?.parentSeedId ?? null,
+      cultivarId: body?.cultivarId ?? null,
+    };
+    db.seeds.push(seed);
+    await saveDb(db);
+    return ok({ seed });
+  }
+  const seedPropEarly = /^\/api\/seeds\/([^/]+)\/propagate$/.exec(p);
+  if (seedPropEarly && method === "POST") {
+    const cur = db.seeds.find((s) => s.id === seedPropEarly[1]) as Record<string, unknown> | undefined;
+    if (!cur) return err(404, "Not found");
+    const gen = Number(cur.generation || 0) + 1;
+    const seed = {
+      ...cur,
+      id: uid(),
+      name: `${cur.name} G${gen}`,
+      generation: gen,
+      parentSeedId: cur.id,
+      purchasedAt: null,
+      propagatedAt: new Date().toISOString().slice(0, 10),
+      quantity: 1,
+      yearHarvested: new Date().getFullYear(),
+      notes: `Vermehrt aus ${cur.id}`,
+    };
     db.seeds.push(seed);
     await saveDb(db);
     return ok({ seed });
@@ -273,12 +381,67 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
     return ok({ planting });
   }
   if (p === "/api/garden/analysis") {
-    return ok({ year: new Date().getFullYear(), score: 70, rotation: [], companions: [] });
+    const year = Number(url.searchParams.get("year") || new Date().getFullYear());
+    const bedId = url.searchParams.get("bedId");
+    const current = db.plantings.filter(
+      (x) => Number(x.year) === year && (!bedId || x.bedId === bedId),
+    ) as never[];
+    const history = db.plantings.filter(
+      (x) => Number(x.year) < year && (!bedId || x.bedId === bedId),
+    ) as never[];
+    return ok({
+      year,
+      score: layoutScore(current),
+      rotation: rotationWarnings(current, history),
+      companions: companionWarnings(current),
+    });
   }
   if (p === "/api/garden/optimize" && method === "POST") {
-    return ok({ plantings: [], score: 70, attempts: 1, message: "Local-Modus: Optimizer braucht Server für Vollanalyse." });
+    const bed = db.beds.find((b) => b.id === body?.bedId);
+    if (!bed) return err(404, "Bed not found");
+    const year = Number(bed.year);
+    const history = db.plantings.filter(
+      (x) => x.bedId === body?.bedId && Number(x.year) < year,
+    ) as never[];
+    const current = db.plantings.filter(
+      (x) => x.bedId === body?.bedId && Number(x.year) === year,
+    ) as never[];
+    const crops = (body?.crops as { name: string; family: string; w?: number; h?: number }[]) || [];
+    const mode = (body?.mode as "fresh" | "fit") || "fresh";
+    const result = optimizeLayout(
+      {
+        bedId: String(body?.bedId),
+        year,
+        widthCells: Number(bed.widthCells),
+        heightCells: Number(bed.heightCells),
+        crops: crops.map((c) => ({ name: c.name, family: c.family, w: c.w || 1, h: c.h || 1 })),
+        locked: mode === "fit" ? current : [],
+        history,
+        mode,
+      },
+      Number(body?.seed) || 42,
+    );
+    return ok(result);
   }
-
+  if (p === "/api/cultivars") {
+    return ok({ cultivars: searchCultivars(url.searchParams.get("q") || "", 80) });
+  }
+  if (p === "/api/garden/rotation-suggest") {
+    const bedId = url.searchParams.get("bedId");
+    const year = Number(url.searchParams.get("year") || new Date().getFullYear());
+    const bed = db.beds.find((b) => b.id === bedId);
+    if (!bed) return err(404, "Bed not found");
+    const suggestions = suggestRotation({
+      bedId: String(bedId),
+      year,
+      widthCells: Number(bed.widthCells),
+      heightCells: Number(bed.heightCells),
+      history: db.plantings.filter((x) => x.bedId === bedId && Number(x.year) < year) as never[],
+      seeds: db.seeds as never[],
+      step: 2,
+    });
+    return ok({ year, bedId, suggestions });
+  }
   if (p === "/api/tasks" && method === "GET") return ok({ tasks: db.tasks });
   if (p === "/api/tasks" && method === "POST") {
     const task = {
@@ -392,8 +555,74 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
   }
 
   if (p === "/api/backup") {
-    const blob = JSON.stringify(db);
-    return ok({ localJson: blob, note: "Local backup JSON" });
+    const snap = await buildLocalSnapshot();
+    return ok({ ...snap, note: "Local backup JSON — use Sync export for file download" });
+  }
+
+  if (p === "/api/sync/export") {
+    return ok(await buildLocalSnapshot());
+  }
+  if (p === "/api/sync/import" && method === "POST") {
+    await applySnapshotToLocal(body as unknown as HortisSyncV1);
+    return ok({ ok: true, upserted: 0, importedAt: new Date().toISOString() });
+  }
+
+  if (p === "/api/species/gbif") {
+    const q = (url.searchParams.get("q") || "").trim();
+    if (q.length < 2) return err(400, "q min 2 chars");
+    try {
+      const res = await fetch(
+        `https://api.gbif.org/v1/species/suggest?q=${encodeURIComponent(q)}&limit=12`,
+      );
+      if (!res.ok) return err(502, `GBIF ${res.status}`);
+      const data = (await res.json()) as Array<{
+        key?: number;
+        scientificName?: string;
+        canonicalName?: string;
+        vernacularName?: string;
+        rank?: string;
+        kingdom?: string;
+      }>;
+      return ok({
+        results: (Array.isArray(data) ? data : []).map((r) => ({
+          key: r.key,
+          scientificName: r.scientificName || r.canonicalName || "",
+          vernacularName: r.vernacularName || "",
+          rank: r.rank || "",
+          kingdom: r.kingdom || "",
+        })),
+      });
+    } catch {
+      return err(502, "GBIF unreachable");
+    }
+  }
+
+  if (p === "/api/identify" && method === "POST") {
+    const key = String(db.settings.plantNetApiKey || "");
+    if (!key) return err(400, "PlantNet API-Key fehlt (Einstellungen)");
+    return err(501, "Local identify: bitte Bild über Kollaboration mit Server oder Key + FormData nutzen");
+  }
+
+  const photosPost = /^\/api\/plants\/([^/]+)\/photos$/.exec(p);
+  if (photosPost && method === "POST") {
+    // Local: body may contain dataUrl from client helper
+    const dataUrl = String(body?.dataUrl || "");
+    if (!dataUrl.startsWith("data:")) return err(400, "dataUrl required in local mode");
+    const photo = {
+      id: uid(),
+      plantId: photosPost[1],
+      path: dataUrl,
+      url: dataUrl,
+      createdAt: new Date().toISOString(),
+    };
+    db.photos.push(photo);
+    const plant = db.plants.find((x) => x.id === photosPost[1]);
+    if (plant) {
+      plant.photoUrl = dataUrl;
+      plant.photoPath = dataUrl;
+    }
+    await saveDb(db);
+    return ok({ photo });
   }
 
   return err(404, `Local handler missing: ${method} ${p}`);

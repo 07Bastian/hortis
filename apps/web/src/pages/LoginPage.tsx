@@ -1,9 +1,11 @@
 import { FormEvent, useState } from "react";
 import { getMode } from "../api";
 import { useAuth } from "../auth";
+import { useI18n } from "../i18n/context";
 
 export function LoginPage() {
   const { login } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState("admin@hortis.local");
   const [password, setPassword] = useState("hortis-admin-change-me");
   const [error, setError] = useState("");
@@ -28,15 +30,16 @@ export function LoginPage() {
       <form className="panel login-panel stack" onSubmit={onSubmit}>
         <div>
           <div className="brand">Hortis</div>
-          <p className="muted">Self-hosted Pflege für Zimmer, Bonsai und Beete.</p>
-          <p className="badge">{mode === "local" ? "Local-Modus (ohne Server)" : "Server-Modus"}</p>
+          <p className="muted">{t.login.title}</p>
+          <p className="badge">{mode === "local" ? t.mode.local : t.mode.server}</p>
+          {mode === "local" ? <p className="muted small">{t.login.localHint}</p> : null}
         </div>
         <label className="field">
-          E-Mail
+          {t.login.email}
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
         </label>
         <label className="field">
-          Passwort
+          {t.login.password}
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -47,7 +50,7 @@ export function LoginPage() {
         </label>
         {error ? <div className="badge danger">{error}</div> : null}
         <button className="btn" disabled={busy}>
-          {busy ? "Anmelden…" : "Anmelden"}
+          {busy ? "…" : t.login.submit}
         </button>
       </form>
     </div>

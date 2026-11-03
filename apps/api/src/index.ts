@@ -18,10 +18,21 @@ import { settingsRoutes } from "./routes/settings.js";
 import { uploadRoutes } from "./routes/uploads.js";
 import { collabRoutes } from "./routes/collab.js";
 import { growRoutes } from "./routes/grow.js";
+import { syncRoutes } from "./routes/sync.js";
 import "./db.js";
 
 mkdirSync(config.uploadDir, { recursive: true });
 ensureAdminUser();
+
+if (
+  config.jwtSecret.includes("change-me") ||
+  config.jwtSecret.includes("dev-only") ||
+  config.adminPassword === "hortis-admin-change-me"
+) {
+  console.warn(
+    "[hortis] WARNING: Default JWT secret and/or admin password still set. Change HORTIS_JWT_SECRET and HORTIS_ADMIN_PASSWORD before production.",
+  );
+}
 
 const app = Fastify({
   logger: true,
@@ -69,6 +80,7 @@ await app.register(settingsRoutes);
 await app.register(uploadRoutes);
 await app.register(collabRoutes);
 await app.register(growRoutes);
+await app.register(syncRoutes);
 
 const webDist = resolve(process.cwd(), "../web/dist");
 if (existsSync(webDist)) {

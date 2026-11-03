@@ -120,6 +120,15 @@ export const seedSchema = z.object({
   unit: z.string().max(40).default("pkt"),
   yearHarvested: z.number().int().nullable().optional(),
   notes: z.string().max(2000).default(""),
+  nameDe: z.string().max(160).default(""),
+  nameEn: z.string().max(160).default(""),
+  nameLatin: z.string().max(200).default(""),
+  license: z.string().max(80).default("unknown"),
+  purchasedAt: z.string().nullable().optional(),
+  propagatedAt: z.string().nullable().optional(),
+  generation: z.number().int().min(0).max(99).default(0),
+  parentSeedId: z.string().uuid().nullable().optional(),
+  cultivarId: z.string().max(80).nullable().optional(),
 });
 
 export const plantingSchema = z.object({

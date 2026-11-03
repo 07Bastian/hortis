@@ -1,5 +1,14 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getApiBase, getMode, getToken, setApiBase, setMode, type AppMode } from "../api";
+import { useI18n } from "../i18n/context";
+import {
+  applySnapshotToLocal,
+  buildLocalSnapshot,
+  downloadJson,
+  pullServerToLocal,
+  pushLocalToServer,
+  type HortisSyncV1,
+} from "../local/sync";
 import { useTheme, type ThemeId } from "../theme";
 
 type Settings = {
@@ -26,6 +35,7 @@ type Settings = {
 
 export function SettingsPage() {
   const { theme, themes, setTheme } = useTheme();
+  const { t, lang, setLang } = useI18n();
   const [mode, setModeState] = useState<AppMode>(getMode());
   const [apiBase, setApiBaseState] = useState(getApiBase());
   const [s, setS] = useState<Settings | null>(null);
@@ -146,11 +156,8 @@ export function SettingsPage() {
       {msg ? <div className="badge" style={{ marginBottom: 12 }}>{msg}</div> : null}
 
       <section className="panel stack" style={{ marginBottom: "1rem" }}>
-        <h3>Betriebsmodus</h3>
-        <p className="muted">
-          <strong>Local:</strong> APK/Gerät ohne Server (IndexedDB).{" "}
-          <strong>Server:</strong> Self-Host-API (LAN/VPS).
-        </p>
+        <h3>{t.mode.title}</h3>
+        <p className="muted">{t.mode.hint}</p>
         <div className="row">
           <button
             type="button"
@@ -161,7 +168,7 @@ export function SettingsPage() {
               setMsg("Local-Modus aktiv – Seite neu laden.");
             }}
           >
-            Local (ohne Server)
+            {t.mode.local}
           </button>
           <button
             type="button"
@@ -172,7 +179,7 @@ export function SettingsPage() {
               setMsg("Server-Modus aktiv – API-URL setzen und neu laden.");
             }}
           >
-            Server
+            {t.mode.server}
           </button>
         </div>
         {mode === "server" ? (
@@ -185,6 +192,15 @@ export function SettingsPage() {
             />
           </label>
         ) : null}
+        <div className="row">
+          <span className="muted">{t.lang}</span>
+          <button type="button" className={`btn secondary ${lang === "de" ? "active-lang" : ""}`} onClick={() => setLang("de")}>
+            DE
+          </button>
+          <button type="button" className={`btn secondary ${lang === "en" ? "active-lang" : ""}`} onClick={() => setLang("en")}>
+            EN
+          </button>
+        </div>
         <button
           type="button"
           className="btn secondary"
@@ -195,6 +211,62 @@ export function SettingsPage() {
         >
           Speichern & neu laden
         </button>
+      </section>
+
+      <section className="panel stack" style={{ marginBottom: "1rem" }}>
+        <h3>{t.sync.title}</h3>
+        <div className="row wrap">
+          <button
+            type="button"
+            className="btn"
+            onClick={() =>
+              void pushLocalToServer()
+                .then((r) => setMsg(`Push OK · ${r.upserted} Einträge`))
+                .catch((e: Error) => setMsg(e.message))
+            }
+          >
+            {t.sync.push}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={() =>
+              void pullServerToLocal()
+                .then(() => setMsg("Pull OK – Local ersetzt. Neu laden empfohlen."))
+                .catch((e: Error) => setMsg(e.message))
+            }
+          >
+            {t.sync.pull}
+          </button>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() =>
+              void buildLocalSnapshot().then((snap) =>
+                downloadJson(`hortis-local-${new Date().toISOString().slice(0, 10)}.json`, snap),
+              )
+            }
+          >
+            {t.sync.exportFile}
+          </button>
+          <label className="btn secondary" style={{ cursor: "pointer" }}>
+            {t.sync.importFile}
+            <input
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                void file.text().then(async (txt) => {
+                  const snap = JSON.parse(txt) as HortisSyncV1;
+                  await applySnapshotToLocal(snap);
+                  setMsg("Import OK – neu laden.");
+                });
+              }}
+            />
+          </label>
+        </div>
       </section>
 
       <section className="panel stack" style={{ marginBottom: "1rem" }}>

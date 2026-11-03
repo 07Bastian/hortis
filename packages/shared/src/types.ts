@@ -111,6 +111,15 @@ export interface SeedItem {
   unit: string;
   yearHarvested: number | null;
   notes: string;
+  nameDe: string;
+  nameEn: string;
+  nameLatin: string;
+  license: string;
+  purchasedAt: string | null;
+  propagatedAt: string | null;
+  generation: number;
+  parentSeedId: string | null;
+  cultivarId: string | null;
 }
 
 export interface Planting {

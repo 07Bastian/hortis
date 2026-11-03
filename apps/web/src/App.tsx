@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
+import { useI18n } from "./i18n/context";
 import { LoginPage } from "./pages/LoginPage";
 import { HomePage } from "./pages/HomePage";
 import { IndoorPage } from "./pages/IndoorPage";
@@ -12,53 +14,126 @@ import { CollabPage } from "./pages/CollabPage";
 import { GrowPage } from "./pages/GrowPage";
 import { useTheme } from "./theme";
 
+function InstallBanner() {
+  const { t } = useI18n();
+  const [deferred, setDeferred] = useState<{ prompt: () => Promise<void> } | null>(null);
+  const [hidden, setHidden] = useState(() => localStorage.getItem("hortis_hide_install") === "1");
+
+  useEffect(() => {
+    const onBip = (e: Event) => {
+      e.preventDefault();
+      const ev = e as Event & { prompt: () => Promise<void> };
+      setDeferred({ prompt: () => ev.prompt() });
+    };
+    window.addEventListener("beforeinstallprompt", onBip);
+    return () => window.removeEventListener("beforeinstallprompt", onBip);
+  }, []);
+
+  if (hidden || !deferred) return null;
+  return (
+    <div className="install-banner">
+      <span>{t.install}</span>
+      <button
+        type="button"
+        className="btn"
+        onClick={() => void deferred.prompt().then(() => setDeferred(null))}
+      >
+        {t.install}
+      </button>
+      <button
+        type="button"
+        className="btn secondary"
+        onClick={() => {
+          localStorage.setItem("hortis_hide_install", "1");
+          setHidden(true);
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { theme, themes, setTheme } = useTheme();
+  const { t, lang, setLang } = useI18n();
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">Hortis</div>
-        <div className="brand-sub">Sammlung · Pflege · Beet</div>
+        <div className="brand-sub">{t.brandSub}</div>
         <nav className="nav">
-          <NavLink to="/" end>Übersicht</NavLink>
-          <NavLink to="/indoor">Zimmer</NavLink>
-          <NavLink to="/bonsai">Bonsai</NavLink>
-          <NavLink to="/garden">Garten</NavLink>
-          <NavLink to="/grow">Grow</NavLink>
-          <NavLink to="/guides">Guides</NavLink>
-          <NavLink to="/collab">Kollaboration</NavLink>
-          <NavLink to="/ops">Aufgaben</NavLink>
-          <NavLink to="/settings">Einstellungen</NavLink>
+          <NavLink to="/" end>
+            {t.nav.home}
+          </NavLink>
+          <NavLink to="/indoor">{t.nav.indoor}</NavLink>
+          <NavLink to="/bonsai">{t.nav.bonsai}</NavLink>
+          <NavLink to="/garden">{t.nav.garden}</NavLink>
+          <NavLink to="/grow">{t.nav.grow}</NavLink>
+          <NavLink to="/guides">{t.nav.guides}</NavLink>
+          <NavLink to="/collab">{t.nav.collab}</NavLink>
+          <NavLink to="/ops">{t.nav.ops}</NavLink>
+          <NavLink to="/settings">{t.nav.settings}</NavLink>
         </nav>
         <div className="theme-switch">
-          {themes.map((t) => (
+          {themes.map((th) => (
             <button
-              key={t.id}
+              key={th.id}
               type="button"
-              className={theme === t.id ? "active" : ""}
-              onClick={() => void setTheme(t.id)}
+              className={theme === th.id ? "active" : ""}
+              onClick={() => void setTheme(th.id)}
             >
-              {t.label}
+              {th.label}
             </button>
           ))}
+        </div>
+        <div className="lang-switch row">
+          <span className="muted">{t.lang}</span>
+          <button
+            type="button"
+            className={`btn secondary ${lang === "de" ? "active-lang" : ""}`}
+            onClick={() => setLang("de")}
+          >
+            DE
+          </button>
+          <button
+            type="button"
+            className={`btn secondary ${lang === "en" ? "active-lang" : ""}`}
+            onClick={() => setLang("en")}
+          >
+            EN
+          </button>
         </div>
         <div className="auth-meta">
           <div>{user?.displayName}</div>
           <div className="muted">{user?.email}</div>
           <button className="btn secondary" style={{ marginTop: 8 }} onClick={logout}>
-            Abmelden
+            {t.logout}
           </button>
         </div>
       </aside>
-      <main className="main">{children}</main>
+      <nav className="bottom-nav">
+        <NavLink to="/" end>
+          {t.nav.home}
+        </NavLink>
+        <NavLink to="/indoor">{t.nav.indoor}</NavLink>
+        <NavLink to="/garden">{t.nav.garden}</NavLink>
+        <NavLink to="/ops">{t.nav.ops}</NavLink>
+        <NavLink to="/settings">{t.nav.settings}</NavLink>
+      </nav>
+      <main className="main">
+        <InstallBanner />
+        {children}
+      </main>
     </div>
   );
 }
 
 export function App() {
   const { user, loading } = useAuth();
-  if (loading) return <div className="login-wrap muted">Lade Hortis…</div>;
+  const { t } = useI18n();
+  if (loading) return <div className="login-wrap muted">{t.loading}</div>;
   if (!user) return <LoginPage />;
 
   return (

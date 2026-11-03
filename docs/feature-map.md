@@ -37,7 +37,14 @@ Stand nach Gap-Lauf gegen HortusFox, OlsGrow, Plant-it, Gardener, Beet Anything,
 | Nährstoff-EC / GDD | – | – | – | – | – | ✓ | ✓ (Port, SQLite) |
 | HA Custom Integration | – | Hooks | – | – | – | ✓ | Hook-URL |
 | Layout-Optimizer AI | – | – | – | Autofill | ✓ | – | ✓ Optimizer |
-| Krankheits-ID (Blatt) | – | ✓ | – | – | – | ✓ | via PlantNet |
+| Krankheits-ID (Blatt) | – | ✓ | – | – | – | ✓ | PlantNet leaf + Tip |
+| Sortenkatalog DE/EN/Lat | – | ~ | – | – | ~ | ✓ | ✓ Katalog + Besitz |
+| Fruchtfolge-Vorschläge | – | – | – | ~ | ✓ | ✓ | ✓ suggestRotation |
+| Saat-Generationen | – | – | – | – | – | ~ | ✓ |
+| Local↔Server Sync | – | – | – | Sync | – | – | ✓ hortis-sync-v1 |
+| PWA | – | ✓ | ✓ | ✓ | ✓ | – | ✓ |
+| GBIF-Anreicherung | ✓ | – | – | – | – | – | ✓ |
+| i18n DE/EN | – | ✓ | – | – | – | – | ✓ |
 | K8s Deploy | – | – | – | – | – | ✓ | optional Hortis-only |
 
 Legende: HF HortusFox, OG OlsGrow, PI Plant-it, GA Gardener, BA Beet Anything, KP Kamerplanter.

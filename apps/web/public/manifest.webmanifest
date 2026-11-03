@@ -1,0 +1,18 @@
+{
+  "name": "Hortis",
+  "short_name": "Hortis",
+  "description": "Zimmerpflanzen, Bonsai und Selbstversorgung",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1a12",
+  "theme_color": "#1f3d2a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

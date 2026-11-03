@@ -34,6 +34,9 @@ Unter **Einstellungen**:
 
 - **APK allein (Local):** ja — Daten auf dem Gerät (IndexedDB), kein Server nötig  
 - **Server + Web/APK:** empfohlen für Familie, Backup, Wetter-live, PlantNet, Push/Mail  
+- **Sync:** Einstellungen → Local↔Server push/pull oder JSON-Datei (`hortis-sync-v1`)
+- **PWA:** installierbar im Browser; HTTPS siehe [docs/proxy.md](docs/proxy.md)
+- **Saatgut:** Katalog DE/EN/Latein, Lizenz, Generation, Fruchtfolge-Vorschläge
 
 Umschalten: **Einstellungen → Betriebsmodus**.
 

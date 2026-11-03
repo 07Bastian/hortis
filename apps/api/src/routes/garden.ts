@@ -5,6 +5,8 @@ import {
   harvestBlockedUntil,
   layoutScore,
   rotationWarnings,
+  searchCultivars,
+  suggestRotation,
 } from "@hortis/garden-engine";
 import { db, uid } from "../db.js";
 import { requireAuth } from "../auth/guard.js";
@@ -51,20 +53,73 @@ export async function gardenRoutes(app: FastifyInstance): Promise<void> {
     const parsed = seedSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
     const id = uid();
+    const d = parsed.data;
+    const nameDe = d.nameDe || d.name;
     db.prepare(
-      `INSERT INTO seeds (id, name, species, family, quantity, unit, year_harvested, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO seeds (
+         id, name, species, family, quantity, unit, year_harvested, notes,
+         name_de, name_en, name_latin, license, purchased_at, propagated_at,
+         generation, parent_seed_id, cultivar_id
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       id,
-      parsed.data.name,
-      parsed.data.species,
-      parsed.data.family,
-      parsed.data.quantity,
-      parsed.data.unit,
-      parsed.data.yearHarvested ?? null,
-      parsed.data.notes,
+      d.name,
+      d.species || d.nameLatin,
+      d.family,
+      d.quantity,
+      d.unit,
+      d.yearHarvested ?? null,
+      d.notes,
+      nameDe,
+      d.nameEn,
+      d.nameLatin || d.species,
+      d.license,
+      d.purchasedAt ?? null,
+      d.propagatedAt ?? null,
+      d.generation,
+      d.parentSeedId ?? null,
+      d.cultivarId ?? null,
     );
     const row = db.prepare(`SELECT * FROM seeds WHERE id = ?`).get(id);
+    return { seed: mapSeed(row as Record<string, unknown>) };
+  });
+
+  app.post("/api/seeds/:id/propagate", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const cur = db.prepare(`SELECT * FROM seeds WHERE id = ?`).get(id) as
+      | Record<string, unknown>
+      | undefined;
+    if (!cur) return reply.code(404).send({ error: "Not found" });
+    const mapped = mapSeed(cur);
+    const newId = uid();
+    const now = new Date().toISOString().slice(0, 10);
+    const gen = mapped.generation + 1;
+    db.prepare(
+      `INSERT INTO seeds (
+         id, name, species, family, quantity, unit, year_harvested, notes,
+         name_de, name_en, name_latin, license, purchased_at, propagated_at,
+         generation, parent_seed_id, cultivar_id
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      newId,
+      `${mapped.name} G${gen}`,
+      mapped.species,
+      mapped.family,
+      1,
+      mapped.unit,
+      new Date().getFullYear(),
+      `Vermehrt aus ${mapped.id}`,
+      mapped.nameDe,
+      mapped.nameEn,
+      mapped.nameLatin,
+      mapped.license === "f1" ? "unknown" : mapped.license,
+      null,
+      now,
+      gen,
+      id,
+      mapped.cultivarId,
+    );
+    const row = db.prepare(`SELECT * FROM seeds WHERE id = ?`).get(newId);
     return { seed: mapSeed(row as Record<string, unknown>) };
   });
 
@@ -76,18 +131,28 @@ export async function gardenRoutes(app: FastifyInstance): Promise<void> {
       | Record<string, unknown>
       | undefined;
     if (!cur) return reply.code(404).send({ error: "Not found" });
+    const p = parsed.data;
     db.prepare(
-      `UPDATE seeds SET name=?, species=?, family=?, quantity=?, unit=?, year_harvested=?, notes=? WHERE id=?`,
+      `UPDATE seeds SET name=?, species=?, family=?, quantity=?, unit=?, year_harvested=?, notes=?,
+       name_de=?, name_en=?, name_latin=?, license=?, purchased_at=?, propagated_at=?,
+       generation=?, parent_seed_id=?, cultivar_id=? WHERE id=?`,
     ).run(
-      asSql(parsed.data.name ?? cur.name),
-      asSql(parsed.data.species ?? cur.species),
-      asSql(parsed.data.family ?? cur.family),
-      asSql(parsed.data.quantity ?? cur.quantity),
-      asSql(parsed.data.unit ?? cur.unit),
-      asSql(
-        parsed.data.yearHarvested === undefined ? cur.year_harvested : parsed.data.yearHarvested,
-      ),
-      asSql(parsed.data.notes ?? cur.notes),
+      asSql(p.name ?? cur.name),
+      asSql(p.species ?? cur.species),
+      asSql(p.family ?? cur.family),
+      asSql(p.quantity ?? cur.quantity),
+      asSql(p.unit ?? cur.unit),
+      asSql(p.yearHarvested === undefined ? cur.year_harvested : p.yearHarvested),
+      asSql(p.notes ?? cur.notes),
+      asSql(p.nameDe ?? cur.name_de),
+      asSql(p.nameEn ?? cur.name_en),
+      asSql(p.nameLatin ?? cur.name_latin),
+      asSql(p.license ?? cur.license),
+      asSql(p.purchasedAt === undefined ? cur.purchased_at : p.purchasedAt),
+      asSql(p.propagatedAt === undefined ? cur.propagated_at : p.propagatedAt),
+      asSql(p.generation ?? cur.generation),
+      asSql(p.parentSeedId === undefined ? cur.parent_seed_id : p.parentSeedId),
+      asSql(p.cultivarId === undefined ? cur.cultivar_id : p.cultivarId),
       id,
     );
     const row = db.prepare(`SELECT * FROM seeds WHERE id = ?`).get(id);
@@ -220,5 +285,39 @@ export async function gardenRoutes(app: FastifyInstance): Promise<void> {
       rotation: rotationWarnings(current, history),
       companions: companionWarnings(current),
     };
+  });
+
+  app.get("/api/cultivars", async (request) => {
+    const { q } = request.query as { q?: string };
+    return { cultivars: searchCultivars(q || "", 80) };
+  });
+
+  app.get("/api/garden/rotation-suggest", async (request, reply) => {
+    const { bedId, year } = request.query as { bedId?: string; year?: string };
+    if (!bedId) return reply.code(400).send({ error: "bedId required" });
+    const y = year ? Number(year) : new Date().getFullYear();
+    const bed = db.prepare(`SELECT * FROM beds WHERE id = ?`).get(bedId) as
+      | Record<string, unknown>
+      | undefined;
+    if (!bed) return reply.code(404).send({ error: "Bed not found" });
+    const history = db
+      .prepare(`SELECT * FROM plantings WHERE bed_id = ? AND year < ?`)
+      .all(bedId, y)
+      .map((r) => mapPlanting(r as Record<string, unknown>));
+    const seeds = db
+      .prepare(`SELECT * FROM seeds`)
+      .all()
+      .map((r) => mapSeed(r as Record<string, unknown>));
+    const mappedBed = mapBed(bed);
+    const suggestions = suggestRotation({
+      bedId,
+      year: y,
+      widthCells: mappedBed.widthCells,
+      heightCells: mappedBed.heightCells,
+      history,
+      seeds,
+      step: 2,
+    });
+    return { year: y, bedId, suggestions };
   });
 }

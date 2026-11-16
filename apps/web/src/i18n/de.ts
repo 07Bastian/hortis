@@ -1,5 +1,5 @@
 export const de = {
-  brandSub: "Sammlung · Pflege · Beet",
+  brandSub: "Pflanzen · Pflege · Beet",
   nav: {
     home: "Übersicht",
     indoor: "Zimmer",
@@ -14,7 +14,7 @@ export const de = {
   logout: "Abmelden",
   loading: "Lade Hortis…",
   login: {
-    title: "Anmelden",
+    title: "Willkommen in Hortis",
     email: "E-Mail",
     password: "Passwort",
     submit: "Einloggen",

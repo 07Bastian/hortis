@@ -54,7 +54,7 @@ export function HomePage() {
       <div className="page-head">
         <div>
           <h1>Dein Grünraum</h1>
-          <p>Sammlung, Pflege und Beetplanung – self-hosted wie HortusFox & OlsGrow.</p>
+          <p>Pflanzen pflegen, Beete planen und Saatgut im Blick behalten – alles in Hortis.</p>
         </div>
       </div>
 
@@ -68,30 +68,55 @@ export function HomePage() {
             Regen 24h: {weather?.rainMmNext24h ?? "—"} mm
             {weather?.lat != null ? ` · ${weather.lat.toFixed(3)}, ${weather.lon?.toFixed(3)}` : ""}
           </div>
-          <Link className="btn secondary" to="/settings" style={{ marginTop: 12, display: "inline-flex" }}>
-            Standort ändern
-          </Link>
+          <div className="quick-actions">
+            <Link className="btn secondary" to="/settings">
+              Standort
+            </Link>
+            <Link className="btn secondary" to="/indoor">
+              Pflanze anlegen
+            </Link>
+            <Link className="btn secondary" to="/garden">
+              Beet öffnen
+            </Link>
+            <Link className="btn secondary" to="/ops">
+              Aufgaben
+            </Link>
+          </div>
         </div>
         <div className="hero-stats">
           <div><strong>{counts.indoor}</strong><span>Zimmer</span></div>
           <div><strong>{counts.bonsai}</strong><span>Bonsai</span></div>
           <div><strong>{counts.beds}</strong><span>Beete</span></div>
-          <div><strong>{counts.tasks}</strong><span>offen</span></div>
+          <div><strong>{counts.seeds}</strong><span>Saatgut</span></div>
         </div>
       </section>
 
       <div className="grid cols-3" style={{ marginTop: "1rem" }}>
         <Link className="panel pillar-link" to="/indoor">
           <h2>Zimmer</h2>
-          <p className="muted">Standorte, Profile, Galerie, Quick-Care</p>
+          <p className="muted">Standorte, Pflege und Fotos</p>
         </Link>
         <Link className="panel pillar-link" to="/bonsai">
           <h2>Bonsai</h2>
-          <p className="muted">Stil, Draht, Saison, Maße, Fotos</p>
+          <p className="muted">Stil, Draht, Saison und Maße</p>
         </Link>
         <Link className="panel pillar-link" to="/garden">
           <h2>Garten</h2>
-          <p className="muted">Beete, Saatgut, Fruchtfolge</p>
+          <p className="muted">Beete, Sorten und Fruchtfolge</p>
+        </Link>
+      </div>
+      <div className="grid cols-3" style={{ marginTop: "1rem" }}>
+        <Link className="panel pillar-link" to="/grow">
+          <h2>Grow</h2>
+          <p className="muted">GDD-Phasen und Nährlösung</p>
+        </Link>
+        <Link className="panel pillar-link" to="/collab">
+          <h2>Werkzeuge</h2>
+          <p className="muted">Suche, Kalender, Bestimmung</p>
+        </Link>
+        <Link className="panel pillar-link" to="/guides">
+          <h2>Guides</h2>
+          <p className="muted">Kurze Praxis-Hinweise</p>
         </Link>
       </div>
 

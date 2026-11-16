@@ -159,7 +159,7 @@ export function IndoorPage() {
       <div className="page-head">
         <div>
           <h1>Zimmerpflanzen</h1>
-          <p>Sammlung mit Standorten, Pflegeprofilen und Galerie – wie HortusFox, self-hosted.</p>
+          <p>Standorte, Pflegeprofile, Erinnerungen und Fotos für deine Zimmerpflanzen.</p>
         </div>
       </div>
 

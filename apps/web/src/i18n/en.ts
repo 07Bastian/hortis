@@ -1,7 +1,7 @@
 import type { Dict } from "./de";
 
 export const en: Dict = {
-  brandSub: "Collection · Care · Beds",
+  brandSub: "Plants · Care · Beds",
   nav: {
     home: "Overview",
     indoor: "Indoor",

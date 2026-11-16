@@ -56,7 +56,7 @@ function InstallBanner() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
-  const { theme, themes, setTheme } = useTheme();
+  const { theme, themes, setTheme, density, densities, setDensity } = useTheme();
   const { t, lang, setLang } = useI18n();
   return (
     <div className="app-shell">
@@ -76,19 +76,38 @@ function Shell({ children }: { children: React.ReactNode }) {
           <NavLink to="/ops">{t.nav.ops}</NavLink>
           <NavLink to="/settings">{t.nav.settings}</NavLink>
         </nav>
-        <div className="theme-switch">
-          {themes.map((th) => (
-            <button
-              key={th.id}
-              type="button"
-              className={theme === th.id ? "active" : ""}
-              onClick={() => void setTheme(th.id)}
-            >
-              {th.label}
-            </button>
-          ))}
+        <div className="appearance-block">
+          <h4>Farbe</h4>
+          <div className="theme-switch">
+            {themes.map((th) => (
+              <button
+                key={th.id}
+                type="button"
+                data-preview={th.id}
+                className={theme === th.id ? "active" : ""}
+                onClick={() => void setTheme(th.id)}
+              >
+                <span className="swatch" />
+                <strong>{th.label}</strong>
+                <span className="muted small">{th.hint}</span>
+              </button>
+            ))}
+          </div>
+          <h4 style={{ marginTop: "0.85rem" }}>Dichte</h4>
+          <div className="density-switch">
+            {densities.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                className={density === d.id ? "active" : ""}
+                onClick={() => setDensity(d.id)}
+              >
+                <strong>{d.label}</strong>
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="lang-switch row">
+        <div className="lang-switch row" style={{ marginTop: "0.85rem" }}>
           <span className="muted">{t.lang}</span>
           <button
             type="button"

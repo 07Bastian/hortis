@@ -126,7 +126,7 @@ export function CollabPage() {
       <div className="page-head">
         <div>
           <h1>Kollaboration</h1>
-          <p>Suche, Chat, Kalender, Historie und PlantNet-ID – HortusFox / OlsGrow.</p>
+          <p>Suche, Notizen, Kalender, Historie sowie Art- und Blattcheck.</p>
         </div>
       </div>
       <div className="row" style={{ marginBottom: 12 }}>

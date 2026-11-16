@@ -68,7 +68,7 @@ export function GrowPage() {
       <div className="page-head">
         <div>
           <h1>Grow-Science</h1>
-          <p>GDD-Phasen und EC-Mischrechner (Kamerplanter-Port, ohne Cluster).</p>
+          <p>Wachstumsphasen nach Gradtagen und Mischrechner für die Nährlösung.</p>
         </div>
       </div>
 

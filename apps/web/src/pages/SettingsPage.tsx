@@ -34,7 +34,7 @@ type Settings = {
 };
 
 export function SettingsPage() {
-  const { theme, themes, setTheme } = useTheme();
+  const { theme, themes, setTheme, density, densities, setDensity } = useTheme();
   const { t, lang, setLang } = useI18n();
   const [mode, setModeState] = useState<AppMode>(getMode());
   const [apiBase, setApiBaseState] = useState(getApiBase());
@@ -270,17 +270,38 @@ export function SettingsPage() {
       </section>
 
       <section className="panel stack" style={{ marginBottom: "1rem" }}>
-        <h3>Theme</h3>
-        <p className="muted">Workspace-Look wie bei HortusFox — wird serverseitig gespeichert.</p>
+        <h3>Darstellung</h3>
+        <p className="muted">Farbe und Dichte – lokal gespeichert, Theme zusätzlich auf dem Server.</p>
+        <h4 className="muted" style={{ margin: "0.4rem 0" }}>
+          Farbe
+        </h4>
         <div className="theme-switch">
-          {themes.map((t) => (
+          {themes.map((th) => (
             <button
-              key={t.id}
+              key={th.id}
               type="button"
-              className={theme === t.id ? "active" : ""}
-              onClick={() => void setTheme(t.id as ThemeId)}
+              data-preview={th.id}
+              className={theme === th.id ? "active" : ""}
+              onClick={() => void setTheme(th.id as ThemeId)}
             >
-              {t.label}
+              <span className="swatch" />
+              <strong>{th.label}</strong>
+              <span className="muted small">{th.hint}</span>
+            </button>
+          ))}
+        </div>
+        <h4 className="muted" style={{ margin: "0.85rem 0 0.4rem" }}>
+          Dichte
+        </h4>
+        <div className="density-switch">
+          {densities.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className={density === d.id ? "active" : ""}
+              onClick={() => setDensity(d.id)}
+            >
+              <strong>{d.label}</strong>
             </button>
           ))}
         </div>

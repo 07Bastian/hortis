@@ -448,7 +448,7 @@ export function GardenPage() {
       </section>
 
       <section className="panel stack" style={{ marginTop: "1rem" }}>
-        <h3>Layout-Optimizer</h3>
+        <h3>Beetlayout vorschlagen</h3>
         <label className="field">
           Kulturen (Name:Familie, …)
           <input value={optCrops} onChange={(e) => setOptCrops(e.target.value)} />

@@ -1,10 +1,9 @@
 # Hortis
 
-Self-hosted App für **Zimmerpflanzen**, **Bonsai** und **Garten/Selbstversorgung**.
-Web-UI + Android (Capacitor) gegen dieselbe API.
+**Hortis** – App für Zimmerpflanzen, Bonsai und Garten/Selbstversorgung.
+Web-UI und Android (Capacitor) mit optionalem eigenen Server.
 
-Inspiriert von / portiert aus: HortusFox, OlsGrow, Plant-it, Gardener, Beet Anything, Kamerplanter.
-Siehe [docs/feature-map.md](docs/feature-map.md) und [LICENSES/NOTICE.md](LICENSES/NOTICE.md).
+OSS-Hinweise und Herkunftsnotizen: [LICENSES/NOTICE.md](LICENSES/NOTICE.md), Feature-Überblick: [docs/feature-map.md](docs/feature-map.md).
 
 ## Wetter-Standort
 

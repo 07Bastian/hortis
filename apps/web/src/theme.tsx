@@ -67,9 +67,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-density", density);
+    const root = document.documentElement;
+    root.setAttribute("data-density", density);
     localStorage.setItem("hortis_density", density);
   }, [density]);
+
+  useEffect(() => {
+    // Ensure attribute exists on first paint (before React hydration effects race)
+    if (!document.documentElement.getAttribute("data-density")) {
+      document.documentElement.setAttribute("data-density", "cozy");
+    }
+  }, []);
 
   useEffect(() => {
     if (!getToken()) return;

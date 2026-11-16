@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -27,10 +28,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return v === "en" || v === "de" ? v : "de";
   });
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = useCallback((l: Lang) => {
     localStorage.setItem(KEY, l);
     setLangState(l);
-    document.documentElement.lang = l;
   }, []);
 
   const value = useMemo(

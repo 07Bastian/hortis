@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getMode, getToken } from "../api";
 import { useAuth } from "../auth";
+import { useI18n } from "../i18n/context";
 
 type Task = { id: string; title: string; done: boolean; dueAt: string | null };
 type Item = {
@@ -13,6 +14,7 @@ type Item = {
 };
 
 export function OpsPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -125,8 +127,8 @@ export function OpsPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Aufgaben & Inventar</h1>
-          <p>Kollaboration, Einkaufsliste und Backup.</p>
+          <h1>{t.ops.title}</h1>
+          <p>{t.ops.subtitle}</p>
         </div>
         {user?.role === "admin" ? (
           <button className="btn secondary" onClick={() => void downloadBackup()}>

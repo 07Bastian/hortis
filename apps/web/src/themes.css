@@ -103,23 +103,46 @@
   --swatch: #8fb39a;
 }
 
-[data-density="cozy"] {
+/* Density must win over any later :root defaults — set on html */
+html,
+html[data-density="cozy"] {
   --space: 1rem;
   --pad: 1.05rem;
-  --control: 0.7rem 0.85rem;
+  --control-y: 0.7rem;
+  --control-x: 0.85rem;
+  --control: var(--control-y) var(--control-x);
   --radius: 10px;
+  --main-pad: 1.35rem 1.5rem 2.4rem;
+  --nav-pad: 0.62rem 0.75rem;
+  --list-pad: 0.65rem 0.7rem;
+  --btn-min: 40px;
+  --type-scale: 1;
 }
 
-[data-density="compact"] {
-  --space: 0.7rem;
-  --pad: 0.75rem;
-  --control: 0.45rem 0.65rem;
-  --radius: 7px;
+html[data-density="compact"] {
+  --space: 0.55rem;
+  --pad: 0.65rem;
+  --control-y: 0.4rem;
+  --control-x: 0.55rem;
+  --control: var(--control-y) var(--control-x);
+  --radius: 6px;
+  --main-pad: 0.85rem 1rem 1.5rem;
+  --nav-pad: 0.4rem 0.55rem;
+  --list-pad: 0.4rem 0.5rem;
+  --btn-min: 34px;
+  --type-scale: 0.94;
 }
 
-[data-density="airy"] {
-  --space: 1.25rem;
-  --pad: 1.25rem;
-  --control: 0.8rem 1rem;
-  --radius: 12px;
+html[data-density="airy"] {
+  --space: 1.35rem;
+  --pad: 1.35rem;
+  --control-y: 0.85rem;
+  --control-x: 1rem;
+  --control: var(--control-y) var(--control-x);
+  --radius: 14px;
+  --main-pad: 1.75rem 1.85rem 2.8rem;
+  --nav-pad: 0.8rem 0.95rem;
+  --list-pad: 0.85rem 0.9rem;
+  --btn-min: 46px;
+  --type-scale: 1.05;
 }

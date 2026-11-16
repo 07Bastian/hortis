@@ -142,14 +142,14 @@ export function SettingsPage() {
     setMsg(`${res.imported} Kalender-Termine als Aufgaben importiert.`);
   }
 
-  if (!s) return <p className="muted">Lade Einstellungen…</p>;
+  if (!s) return <p className="muted">{t.settings.loading}</p>;
 
   return (
     <div>
       <div className="page-head">
         <div>
-          <h1>Einstellungen</h1>
-          <p>Wetter-Standort, Benachrichtigungen und Kalender.</p>
+          <h1>{t.settings.title}</h1>
+          <p>{t.settings.subtitle}</p>
         </div>
       </div>
 
@@ -270,10 +270,10 @@ export function SettingsPage() {
       </section>
 
       <section className="panel stack" style={{ marginBottom: "1rem" }}>
-        <h3>Darstellung</h3>
-        <p className="muted">Farbe und Dichte – lokal gespeichert, Theme zusätzlich auf dem Server.</p>
+        <h3>{t.appearance.title}</h3>
+        <p className="muted">{t.appearance.hint}</p>
         <h4 className="muted" style={{ margin: "0.4rem 0" }}>
-          Farbe
+          {t.appearance.color}
         </h4>
         <div className="theme-switch">
           {themes.map((th) => (
@@ -291,7 +291,7 @@ export function SettingsPage() {
           ))}
         </div>
         <h4 className="muted" style={{ margin: "0.85rem 0 0.4rem" }}>
-          Dichte
+          {t.appearance.density}
         </h4>
         <div className="density-switch">
           {densities.map((d) => (
@@ -301,7 +301,13 @@ export function SettingsPage() {
               className={density === d.id ? "active" : ""}
               onClick={() => setDensity(d.id)}
             >
-              <strong>{d.label}</strong>
+              <strong>
+                {d.id === "compact"
+                  ? t.appearance.compact
+                  : d.id === "airy"
+                    ? t.appearance.airy
+                    : t.appearance.cozy}
+              </strong>
             </button>
           ))}
         </div>

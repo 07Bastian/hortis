@@ -77,7 +77,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <NavLink to="/settings">{t.nav.settings}</NavLink>
         </nav>
         <div className="appearance-block">
-          <h4>Farbe</h4>
+          <h4>{t.appearance.color}</h4>
           <div className="theme-switch">
             {themes.map((th) => (
               <button
@@ -93,7 +93,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               </button>
             ))}
           </div>
-          <h4 style={{ marginTop: "0.85rem" }}>Dichte</h4>
+          <h4 style={{ marginTop: "0.85rem" }}>{t.appearance.density}</h4>
           <div className="density-switch">
             {densities.map((d) => (
               <button
@@ -102,7 +102,13 @@ function Shell({ children }: { children: React.ReactNode }) {
                 className={density === d.id ? "active" : ""}
                 onClick={() => setDensity(d.id)}
               >
-                <strong>{d.label}</strong>
+                <strong>
+                  {d.id === "compact"
+                    ? t.appearance.compact
+                    : d.id === "airy"
+                      ? t.appearance.airy
+                      : t.appearance.cozy}
+                </strong>
               </button>
             ))}
           </div>

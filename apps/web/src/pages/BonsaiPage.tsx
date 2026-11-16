@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getToken } from "../api";
+import { useI18n } from "../i18n/context";
 
 type Profile = {
   style: string;
@@ -32,6 +33,7 @@ type Item = {
 };
 
 export function BonsaiPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
   const [species, setSpecies] = useState("");
@@ -163,8 +165,8 @@ export function BonsaiPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Bonsai</h1>
-          <p>Stil, Maße, Draht, Saisonarbeiten, Galerie und Guides.</p>
+          <h1>{t.bonsai.title}</h1>
+          <p>{t.bonsai.subtitle}</p>
         </div>
       </div>
 

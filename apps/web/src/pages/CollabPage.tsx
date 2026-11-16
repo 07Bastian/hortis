@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getApiBase, getMode, getToken } from "../api";
+import { useI18n } from "../i18n/context";
 
 type ChatMsg = { id: string; displayName: string; body: string; createdAt: string };
 type CalEvent = {
@@ -12,6 +13,7 @@ type CalEvent = {
 type Hist = { id: string; reason: string; archivedAt: string; plant: { name: string; kind: string } };
 
 export function CollabPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<"search" | "chat" | "calendar" | "history" | "identify" | "gbif">(
     "search",
   );
@@ -125,18 +127,18 @@ export function CollabPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Kollaboration</h1>
-          <p>Suche, Notizen, Kalender, Historie sowie Art- und Blattcheck.</p>
+          <h1>{t.collab.title}</h1>
+          <p>{t.collab.subtitle}</p>
         </div>
       </div>
       <div className="row" style={{ marginBottom: 12 }}>
-        {(["search", "chat", "calendar", "history", "identify", "gbif"] as const).map((t) => (
+        {(["search", "chat", "calendar", "history", "identify", "gbif"] as const).map((tabId) => (
           <button
-            key={t}
-            className={`btn ${tab === t ? "" : "secondary"}`}
-            onClick={() => setTab(t)}
+            key={tabId}
+            className={`btn ${tab === tabId ? "" : "secondary"}`}
+            onClick={() => setTab(tabId)}
           >
-            {t}
+            {tabId}
           </button>
         ))}
       </div>

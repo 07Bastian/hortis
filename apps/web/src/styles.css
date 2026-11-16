@@ -1,10 +1,6 @@
 :root {
-  --radius: 10px;
   --font-display: "Literata", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-body: "Karla", "Segoe UI", Tahoma, sans-serif;
-  --space: 1rem;
-  --pad: 1.05rem;
-  --control: 0.7rem 0.85rem;
 }
 
 * {
@@ -21,6 +17,7 @@ body {
   margin: 0;
   color: var(--ink);
   font-family: var(--font-body);
+  font-size: calc(1rem * var(--type-scale, 1));
   background-color: var(--bg1);
   background-image:
     linear-gradient(180deg, var(--bg0), var(--bg2)),
@@ -83,11 +80,11 @@ textarea {
 }
 
 .nav a {
-  padding: 0.62rem 0.75rem;
+  padding: var(--nav-pad);
   border-radius: var(--radius);
   color: var(--muted);
   border: 1px solid transparent;
-  min-height: 42px;
+  min-height: var(--btn-min);
   display: flex;
   align-items: center;
 }
@@ -100,7 +97,7 @@ textarea {
 }
 
 .main {
-  padding: 1.35rem 1.5rem 2.4rem;
+  padding: var(--main-pad);
 }
 
 .page-head {
@@ -204,7 +201,7 @@ textarea {
   color: #f7faf7;
   font-weight: 600;
   cursor: pointer;
-  min-height: 40px;
+  min-height: var(--btn-min);
 }
 
 .btn.secondary {
@@ -237,7 +234,7 @@ textarea {
   justify-content: space-between;
   gap: 0.8rem;
   align-items: center;
-  padding: 0.65rem 0.7rem;
+  padding: var(--list-pad);
   border-radius: calc(var(--radius) - 2px);
   background: var(--panel-strong);
   border: 1px solid var(--line);

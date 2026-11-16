@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useI18n } from "../i18n/context";
 
 type GuideListItem = { id: string; pillar: string; title: string; summary: string };
 type Guide = GuideListItem & { body: string };
 
 export function GuidesPage() {
+  const { t } = useI18n();
   const [list, setList] = useState<GuideListItem[]>([]);
   const [pillar, setPillar] = useState("");
   const [active, setActive] = useState<Guide | null>(null);
@@ -23,15 +25,15 @@ export function GuidesPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Wissen & Guides</h1>
-          <p>Pflegewissen zu Zimmer, Bonsai und Beet – direkt in Hortis.</p>
+          <h1>{t.guides.title}</h1>
+          <p>{t.guides.subtitle}</p>
         </div>
         <select value={pillar} onChange={(e) => setPillar(e.target.value)}>
-          <option value="">Alle</option>
-          <option value="indoor">Zimmer</option>
-          <option value="bonsai">Bonsai</option>
-          <option value="garden">Garten</option>
-          <option value="general">Allgemein</option>
+          <option value="">{t.guides.all}</option>
+          <option value="indoor">{t.guides.indoor}</option>
+          <option value="bonsai">{t.guides.bonsai}</option>
+          <option value="garden">{t.guides.garden}</option>
+          <option value="general">{t.guides.general}</option>
         </select>
       </div>
 

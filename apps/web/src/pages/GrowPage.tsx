@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../api";
+import { useI18n } from "../i18n/context";
 
 type GddItem = {
   plantingId: string;
@@ -21,6 +22,7 @@ type MixResult = {
 };
 
 export function GrowPage() {
+  const { t } = useI18n();
   const [gdd, setGdd] = useState<GddItem[]>([]);
   const [volumeL, setVolumeL] = useState(10);
   const [targetEc, setTargetEc] = useState(1.6);
@@ -67,8 +69,8 @@ export function GrowPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Grow-Science</h1>
-          <p>Wachstumsphasen nach Gradtagen und Mischrechner für die Nährlösung.</p>
+          <h1>{t.grow.title}</h1>
+          <p>{t.grow.subtitle}</p>
         </div>
       </div>
 

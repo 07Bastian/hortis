@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, getMode, getToken } from "../api";
+import { useI18n } from "../i18n/context";
 
 type Location = { id: string; name: string; kind: string };
 type Plant = {
@@ -19,6 +20,7 @@ type Plant = {
 };
 
 export function IndoorPage() {
+  const { t } = useI18n();
   const [locations, setLocations] = useState<Location[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selected, setSelected] = useState<Plant | null>(null);
@@ -158,8 +160,8 @@ export function IndoorPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Zimmerpflanzen</h1>
-          <p>Standorte, Pflegeprofile, Erinnerungen und Fotos für deine Zimmerpflanzen.</p>
+          <h1>{t.indoor.title}</h1>
+          <p>{t.indoor.subtitle}</p>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import { useI18n } from "../i18n/context";
 
 type ReminderStatus = {
   reminder: { plantId: string; eventType: string };
@@ -9,6 +10,7 @@ type ReminderStatus = {
 };
 
 export function HomePage() {
+  const { t } = useI18n();
   const [weather, setWeather] = useState<{
     temperatureC: number | null;
     rainMmNext24h: number;
@@ -38,7 +40,7 @@ export function HomePage() {
         bonsai: bonsai.plants.length,
         beds: beds.beds.length,
         seeds: seeds.seeds.length,
-        tasks: tasks.tasks.filter((t) => !t.done).length,
+        tasks: tasks.tasks.filter((task) => !task.done).length,
       });
       setPhotos(
         [...indoor.plants, ...bonsai.plants]
@@ -53,83 +55,100 @@ export function HomePage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Dein Grünraum</h1>
-          <p>Pflanzen pflegen, Beete planen und Saatgut im Blick behalten – alles in Hortis.</p>
+          <h1>{t.home.title}</h1>
+          <p>{t.home.subtitle}</p>
         </div>
       </div>
 
       <section className="hero-strip panel">
         <div>
-          <div className="muted">Wetter · {weather?.label || "Standort"}</div>
+          <div className="muted">
+            {t.home.weather} · {weather?.label || t.home.location}
+          </div>
           <div className="hero-temp">
             {weather?.temperatureC != null ? `${weather.temperatureC}°` : "—"}
           </div>
           <div className="muted">
-            Regen 24h: {weather?.rainMmNext24h ?? "—"} mm
+            {t.home.rain24}: {weather?.rainMmNext24h ?? "—"} mm
             {weather?.lat != null ? ` · ${weather.lat.toFixed(3)}, ${weather.lon?.toFixed(3)}` : ""}
           </div>
           <div className="quick-actions">
             <Link className="btn secondary" to="/settings">
-              Standort
+              {t.home.location}
             </Link>
             <Link className="btn secondary" to="/indoor">
-              Pflanze anlegen
+              {t.home.addPlant}
             </Link>
             <Link className="btn secondary" to="/garden">
-              Beet öffnen
+              {t.home.openBed}
             </Link>
             <Link className="btn secondary" to="/ops">
-              Aufgaben
+              {t.home.tasks}
             </Link>
           </div>
         </div>
         <div className="hero-stats">
-          <div><strong>{counts.indoor}</strong><span>Zimmer</span></div>
-          <div><strong>{counts.bonsai}</strong><span>Bonsai</span></div>
-          <div><strong>{counts.beds}</strong><span>Beete</span></div>
-          <div><strong>{counts.seeds}</strong><span>Saatgut</span></div>
+          <div>
+            <strong>{counts.indoor}</strong>
+            <span>{t.home.indoor}</span>
+          </div>
+          <div>
+            <strong>{counts.bonsai}</strong>
+            <span>{t.home.bonsai}</span>
+          </div>
+          <div>
+            <strong>{counts.beds}</strong>
+            <span>{t.home.beds}</span>
+          </div>
+          <div>
+            <strong>{counts.seeds}</strong>
+            <span>{t.home.seeds}</span>
+          </div>
         </div>
       </section>
 
       <div className="grid cols-3" style={{ marginTop: "1rem" }}>
         <Link className="panel pillar-link" to="/indoor">
-          <h2>Zimmer</h2>
-          <p className="muted">Standorte, Pflege und Fotos</p>
+          <h2>{t.home.indoor}</h2>
+          <p className="muted">{t.home.indoorHint}</p>
         </Link>
         <Link className="panel pillar-link" to="/bonsai">
-          <h2>Bonsai</h2>
-          <p className="muted">Stil, Draht, Saison und Maße</p>
+          <h2>{t.home.bonsai}</h2>
+          <p className="muted">{t.home.bonsaiHint}</p>
         </Link>
         <Link className="panel pillar-link" to="/garden">
-          <h2>Garten</h2>
-          <p className="muted">Beete, Sorten und Fruchtfolge</p>
+          <h2>{t.nav.garden}</h2>
+          <p className="muted">{t.home.gardenHint}</p>
         </Link>
       </div>
       <div className="grid cols-3" style={{ marginTop: "1rem" }}>
         <Link className="panel pillar-link" to="/grow">
-          <h2>Grow</h2>
-          <p className="muted">GDD-Phasen und Nährlösung</p>
+          <h2>{t.home.grow}</h2>
+          <p className="muted">{t.home.growHint}</p>
         </Link>
         <Link className="panel pillar-link" to="/collab">
-          <h2>Werkzeuge</h2>
-          <p className="muted">Suche, Kalender, Bestimmung</p>
+          <h2>{t.home.tools}</h2>
+          <p className="muted">{t.home.toolsHint}</p>
         </Link>
         <Link className="panel pillar-link" to="/guides">
-          <h2>Guides</h2>
-          <p className="muted">Kurze Praxis-Hinweise</p>
+          <h2>{t.home.guides}</h2>
+          <p className="muted">{t.home.guidesHint}</p>
         </Link>
       </div>
 
       <div className="grid cols-2" style={{ marginTop: "1rem" }}>
         <section className="panel">
-          <h3>Heute fällig</h3>
+          <h3>{t.home.dueToday}</h3>
           {overdue.length === 0 ? (
-            <p className="muted">Alles im grünen Bereich.</p>
+            <p className="muted">{t.home.allGood}</p>
           ) : (
             <ul className="list">
               {overdue.slice(0, 8).map((s, i) => (
                 <li key={i}>
-                  <span>{s.reminder.eventType}{s.suppressedByRain ? " · Regen" : ""}</span>
+                  <span>
+                    {s.reminder.eventType}
+                    {s.suppressedByRain ? ` · ${t.home.rain}` : ""}
+                  </span>
                   <span className="badge danger">{s.overdueDays}d</span>
                 </li>
               ))}
@@ -137,9 +156,9 @@ export function HomePage() {
           )}
         </section>
         <section className="panel">
-          <h3>Galerie</h3>
+          <h3>{t.home.gallery}</h3>
           {photos.length === 0 ? (
-            <p className="muted">Noch keine Fotos – in Zimmer/Bonsai hochladen.</p>
+            <p className="muted">{t.home.noPhotos}</p>
           ) : (
             <div className="photo-row">
               {photos.map((p) => (
@@ -148,8 +167,12 @@ export function HomePage() {
             </div>
           )}
           <div className="row" style={{ marginTop: 12 }}>
-            <Link className="btn secondary" to="/guides">Guides</Link>
-            <Link className="btn secondary" to="/settings">Benachrichtigungen</Link>
+            <Link className="btn secondary" to="/guides">
+              {t.home.guides}
+            </Link>
+            <Link className="btn secondary" to="/settings">
+              {t.home.notifications}
+            </Link>
           </div>
         </section>
       </div>

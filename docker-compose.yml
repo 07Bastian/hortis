@@ -1,21 +1,45 @@
+# Hortis lokal (Zimmer + Bonsai + Garten in einem Container)
+# Start: start-hortis.bat  oder  docker compose up -d --build
+# UI+API: http://localhost:8787
+
+name: hortis
+
 services:
   hortis:
     build: .
     container_name: hortis
     restart: unless-stopped
     ports:
-      - "8787:8787"
+      - "${HORTIS_PORT:-8787}:8787"
+    env_file:
+      - path: .env
+        required: false
     environment:
       HORTIS_JWT_SECRET: ${HORTIS_JWT_SECRET:-please-change-this-secret-to-something-long}
       HORTIS_ADMIN_EMAIL: ${HORTIS_ADMIN_EMAIL:-admin@hortis.local}
       HORTIS_ADMIN_PASSWORD: ${HORTIS_ADMIN_PASSWORD:-hortis-admin-change-me}
-      HORTIS_CORS_ORIGIN: ${HORTIS_CORS_ORIGIN:-*}
-      HORTIS_WEATHER_LAT: ${HORTIS_WEATHER_LAT:-47.9}
-      HORTIS_WEATHER_LON: ${HORTIS_WEATHER_LON:-11.2}
+      # Do not inherit Vite CORS from host .env — container serves UI itself
+      HORTIS_CORS_ORIGIN: ${HORTIS_DOCKER_CORS_ORIGIN:-*}
+      HORTIS_WEATHER_LAT: ${HORTIS_WEATHER_LAT:-47.6779}
+      HORTIS_WEATHER_LON: ${HORTIS_WEATHER_LON:-11.2012}
       HORTIS_DB_PATH: /data/hortis.db
       HORTIS_UPLOAD_DIR: /data/uploads
+      HORTIS_HOST: 0.0.0.0
+      HORTIS_PORT: 8787
     volumes:
       - hortis-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   hortis-data:

@@ -57,13 +57,21 @@ npm run dev:web
 - API: http://localhost:8787  
 - Login: `admin@hortis.local` / `hortis-admin-change-me` (via `.env` ändern)
 
-## Docker
+## Docker (lokal)
+
+Ein Container liefert **API + Web-UI** für Zimmer, Bonsai und Garten.
 
 ```bash
+# Doppelklick oder:
+start-hortis.bat
+# bzw.
 docker compose up -d --build
 ```
 
-API/UI-Static: Port `8787`. Für die Dev-UI mit Vite weiterhin `npm run dev:web` nutzen oder Web-Build vom API-Host ausliefern.
+- UI/API: http://localhost:8787  
+- Login: `admin@hortis.local` / `hortis-admin-change-me` (via `.env` ändern)  
+- Stoppen: `stop-hortis.bat`  
+- Dev mit Vite: weiterhin `npm run dev:api` + `npm run dev:web` (Port 5173) — nicht parallel zu Docker auf demselben API-Port.
 
 ## Android APK
 

@@ -24,6 +24,9 @@ export type AppSettings = {
   plantNetApiKey: string;
   automationWebhookUrl: string;
   theme: string;
+  llmBaseUrl: string;
+  llmApiKey: string;
+  llmModel: string;
 };
 
 const DEFAULTS: AppSettings = {
@@ -48,7 +51,10 @@ const DEFAULTS: AppSettings = {
   vapidSubject: "mailto:admin@hortis.local",
   plantNetApiKey: "",
   automationWebhookUrl: "",
-  theme: "forest",
+  theme: "linen",
+  llmBaseUrl: "https://api.openai.com/v1",
+  llmApiKey: "",
+  llmModel: "gpt-4o-mini",
 };
 
 function getRaw(key: string): string | null {
@@ -111,6 +117,9 @@ export function publicSettings() {
     hasVapidPrivate: Boolean(s.vapidPrivateKey),
     hasPlantNetKey: Boolean(s.plantNetApiKey),
     hasAutomationWebhook: Boolean(s.automationWebhookUrl),
-    theme: s.theme || "forest",
+    hasLlmKey: Boolean(s.llmApiKey),
+    llmBaseUrl: s.llmBaseUrl,
+    llmModel: s.llmModel,
+    theme: s.theme || "linen",
   };
 }

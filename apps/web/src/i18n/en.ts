@@ -98,7 +98,7 @@ export const en: Dict = {
   },
   guides: {
     title: "Knowledge & guides",
-    subtitle: "Care notes for indoor plants, bonsai and beds — inside Hortis.",
+    subtitle: "Practical guides for indoor plants, bonsai and beds — plus optional AI questions.",
     all: "All",
     indoor: "Indoor",
     bonsai: "Bonsai",

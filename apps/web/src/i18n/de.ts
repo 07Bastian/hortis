@@ -96,7 +96,7 @@ export const de = {
   },
   guides: {
     title: "Wissen & Guides",
-    subtitle: "Pflegewissen zu Zimmer, Bonsai und Beet – direkt in Hortis.",
+    subtitle: "Praxis-Guides zu Zimmer, Bonsai und Beet – plus optionale KI-Fragen.",
     all: "Alle",
     indoor: "Zimmer",
     bonsai: "Bonsai",

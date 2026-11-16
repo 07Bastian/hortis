@@ -6,7 +6,8 @@ import { getSettings, publicSettings, setSettings } from "../services/settings.j
 import { notifyAll } from "../services/notify.js";
 import { db, uid } from "../db.js";
 import { exportIcal, importIcal } from "../services/calendar.js";
-import { GUIDES, getGuide } from "../guides/content.js";
+import { getGuide, listGuides, localizeGuide } from "../guides/content.js";
+import { askGuideAssistant } from "../services/guideAsk.js";
 
 const settingsPatchSchema = z.object({
   weatherLat: z.number().min(-90).max(90).optional(),
@@ -28,7 +29,12 @@ const settingsPatchSchema = z.object({
   vapidSubject: z.string().max(200).optional(),
   plantNetApiKey: z.string().max(200).optional(),
   automationWebhookUrl: z.string().max(500).optional(),
-  theme: z.enum(["forest", "clay", "midnight", "orchid", "paper"]).optional(),
+  llmBaseUrl: z.string().max(500).optional(),
+  llmApiKey: z.string().max(500).optional(),
+  llmModel: z.string().max(120).optional(),
+  theme: z
+    .enum(["linen", "moss", "birch", "slate", "dusk", "ink", "forest", "clay", "midnight", "orchid", "paper"])
+    .optional(),
 });
 
 export async function settingsRoutes(app: FastifyInstance): Promise<void> {
@@ -85,23 +91,40 @@ export async function settingsRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/api/guides", { preHandler: requireAuth }, async (request) => {
-    const { pillar } = request.query as { pillar?: string };
-    const list = pillar ? GUIDES.filter((g) => g.pillar === pillar) : GUIDES;
+    const { pillar, lang } = request.query as { pillar?: string; lang?: string };
+    const locale = lang === "en" ? "en" : "de";
+    const list = listGuides(pillar);
     return {
-      guides: list.map((g) => ({
-        id: g.id,
-        pillar: g.pillar,
-        title: g.title,
-        summary: g.summary,
-      })),
+      guides: list.map((g) => {
+        const loc = localizeGuide(g, locale);
+        return { id: loc.id, pillar: loc.pillar, title: loc.title, summary: loc.summary };
+      }),
     };
+  });
+
+  app.post("/api/guides/ask", { preHandler: requireAuth }, async (request, reply) => {
+    const parsed = z
+      .object({
+        question: z.string().min(3).max(2000),
+        pillar: z.string().max(40).optional(),
+        lang: z.enum(["de", "en"]).optional(),
+      })
+      .safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
+    try {
+      const result = await askGuideAssistant(parsed.data);
+      return result;
+    } catch (e) {
+      return reply.code(400).send({ error: e instanceof Error ? e.message : String(e) });
+    }
   });
 
   app.get("/api/guides/:id", { preHandler: requireAuth }, async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { lang } = request.query as { lang?: string };
     const guide = getGuide(id);
     if (!guide) return reply.code(404).send({ error: "Not found" });
-    return { guide };
+    return { guide: localizeGuide(guide, lang === "en" ? "en" : "de") };
   });
 
   app.get("/api/calendar.ics", { preHandler: requireAuth }, async (_request, reply) => {

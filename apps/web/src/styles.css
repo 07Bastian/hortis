@@ -536,6 +536,22 @@ textarea {
   padding: 0;
 }
 
+.guide-list-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  padding: 0.15rem 0;
+}
+
+.guide-list-btn.active-guide strong {
+  color: var(--accent);
+}
+
+.list li:has(.guide-list-btn) {
+  align-items: flex-start;
+}
+
 .list.compact li {
   padding: 0.4rem 0.55rem;
 }

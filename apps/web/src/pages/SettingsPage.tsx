@@ -31,6 +31,9 @@ type Settings = {
   hasSignalWebhook: boolean;
   hasPlantNetKey?: boolean;
   hasAutomationWebhook?: boolean;
+  hasLlmKey?: boolean;
+  llmBaseUrl?: string;
+  llmModel?: string;
 };
 
 export function SettingsPage() {
@@ -44,6 +47,9 @@ export function SettingsPage() {
   const [signalUrl, setSignalUrl] = useState("");
   const [plantNetKey, setPlantNetKey] = useState("");
   const [automationUrl, setAutomationUrl] = useState("");
+  const [llmKey, setLlmKey] = useState("");
+  const [llmBase, setLlmBase] = useState("https://api.openai.com/v1");
+  const [llmModel, setLlmModel] = useState("gpt-4o-mini");
   const [tokenName, setTokenName] = useState("home-assistant");
   const [newToken, setNewToken] = useState("");
   const [msg, setMsg] = useState("");
@@ -52,6 +58,8 @@ export function SettingsPage() {
   async function load() {
     const res = await api<{ settings: Settings }>("/api/settings");
     setS(res.settings);
+    if (res.settings.llmBaseUrl) setLlmBase(res.settings.llmBaseUrl);
+    if (res.settings.llmModel) setLlmModel(res.settings.llmModel);
   }
 
   useEffect(() => {
@@ -503,7 +511,7 @@ export function SettingsPage() {
       </form>
 
       <section className="panel stack" style={{ marginTop: "1rem" }}>
-        <h3>PlantNet & Automationen</h3>
+        <h3>PlantNet, KI & Automationen</h3>
         <label className="field">
           PlantNet API-Key {s.hasPlantNetKey ? "(gesetzt)" : ""}
           <input
@@ -512,6 +520,23 @@ export function SettingsPage() {
             onChange={(e) => setPlantNetKey(e.target.value)}
             placeholder="für Pflanzenerkennung"
           />
+        </label>
+        <label className="field">
+          KI Basis-URL (OpenAI-kompatibel)
+          <input value={llmBase} onChange={(e) => setLlmBase(e.target.value)} />
+        </label>
+        <label className="field">
+          KI API-Key {s.hasLlmKey ? "(gesetzt)" : ""}
+          <input
+            type="password"
+            value={llmKey}
+            onChange={(e) => setLlmKey(e.target.value)}
+            placeholder="sk-… oder Anbieter-Key"
+          />
+        </label>
+        <label className="field">
+          KI Modell
+          <input value={llmModel} onChange={(e) => setLlmModel(e.target.value)} />
         </label>
         <label className="field">
           Automation-Webhook {s.hasAutomationWebhook ? "(gesetzt)" : ""}
@@ -543,16 +568,20 @@ export function SettingsPage() {
                 body: JSON.stringify({
                   ...(plantNetKey ? { plantNetApiKey: plantNetKey } : {}),
                   ...(automationUrl ? { automationWebhookUrl: automationUrl } : {}),
+                  llmBaseUrl: llmBase,
+                  llmModel,
+                  ...(llmKey ? { llmApiKey: llmKey } : {}),
                 }),
               });
               setPlantNetKey("");
               setAutomationUrl("");
+              setLlmKey("");
               setMsg("Integrationen gespeichert.");
               await load();
             })();
           }}
         >
-          PlantNet/Webhook speichern
+          Integrationen speichern
         </button>
       </section>
     </div>

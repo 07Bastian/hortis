@@ -7,6 +7,7 @@ import {
   searchCultivars,
   suggestRotation,
 } from "@hortis/garden-engine";
+import { getGuide, listGuides, localizeGuide } from "@hortis/shared";
 import { loadDb, saveDb, uid, type LocalDb } from "./store";
 import { applySnapshotToLocal, buildLocalSnapshot, type HortisSyncV1 } from "./sync";
 
@@ -83,8 +84,11 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
         hasTelegramToken: false,
         hasSignalWebhook: false,
         hasVapidPrivate: false,
-        hasPlantNetKey: false,
-        hasAutomationWebhook: false,
+        hasPlantNetKey: Boolean(db.settings.plantNetApiKey),
+        hasAutomationWebhook: Boolean(db.settings.automationWebhookUrl),
+        hasLlmKey: Boolean(db.settings.llmApiKey),
+        llmBaseUrl: db.settings.llmBaseUrl || "https://api.openai.com/v1",
+        llmModel: db.settings.llmModel || "gpt-4o-mini",
         vapidPublicKey: "",
         notifyMail: false,
         notifyTelegram: false,
@@ -506,22 +510,67 @@ export async function handleLocal(path: string, options: RequestInit = {}): Prom
   }
 
   if (p === "/api/guides") {
+    const pillar = url.searchParams.get("pillar") || undefined;
+    const lang = url.searchParams.get("lang") === "en" ? "en" : "de";
     return ok({
-      guides: [
-        { id: "local-mode", pillar: "general", title: "Local-Modus", summary: "Daten nur auf dem Gerät." },
-      ],
+      guides: listGuides(pillar || undefined).map((g) => {
+        const loc = localizeGuide(g, lang);
+        return { id: loc.id, pillar: loc.pillar, title: loc.title, summary: loc.summary };
+      }),
     });
   }
+  if (p === "/api/guides/ask" && method === "POST") {
+    const key = String(db.settings.llmApiKey || "");
+    if (!key) return err(400, "KI-API-Key fehlt (Einstellungen → KI-Assistent)");
+    const base = String(db.settings.llmBaseUrl || "https://api.openai.com/v1").replace(/\/$/, "");
+    const model = String(db.settings.llmModel || "gpt-4o-mini");
+    const lang = body?.lang === "en" ? "en" : "de";
+    const question = String(body?.question || "");
+    if (question.length < 3) return err(400, "question required");
+    const corpus = listGuides(typeof body?.pillar === "string" ? body.pillar : undefined)
+      .slice(0, 14)
+      .map((g) => `# ${lang === "en" ? g.titleEn : g.title}\n${lang === "en" ? g.bodyEn : g.body}`)
+      .join("\n\n");
+    try {
+      const res = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.4,
+          messages: [
+            {
+              role: "system",
+              content:
+                lang === "en"
+                  ? "You are Hortis, a careful gardening assistant. Prefer the provided guide notes."
+                  : "Du bist Hortis, ein vorsichtiger Garten-Assistent. Stütze dich auf die Guide-Notizen.",
+            },
+            {
+              role: "user",
+              content: `${corpus}\n\n${lang === "en" ? "Question:" : "Frage:"} ${question}`,
+            },
+          ],
+        }),
+      });
+      if (!res.ok) return err(502, `LLM ${res.status}`);
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const answer = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!answer) return err(502, "Leere KI-Antwort");
+      return ok({ answer, model });
+    } catch (e) {
+      return err(502, e instanceof Error ? e.message : String(e));
+    }
+  }
   if (p.startsWith("/api/guides/")) {
-    return ok({
-      guide: {
-        id: "local-mode",
-        pillar: "general",
-        title: "Local-Modus",
-        summary: "Offline",
-        body: "Im Local-Modus bleiben alle Daten in IndexedDB auf dem Gerät. Für Sync Server verbinden.",
-      },
-    });
+    const id = p.split("/")[3];
+    const guide = getGuide(id);
+    if (!guide) return err(404, "Not found");
+    const lang = url.searchParams.get("lang") === "en" ? "en" : "de";
+    return ok({ guide: localizeGuide(guide, lang) });
   }
 
   if (p === "/api/search") {
